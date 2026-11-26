@@ -1,4 +1,4 @@
-# app.py — Flask + Neon Postgres + Admin Custom Transactions + User Login
+# app.py — Flask + Neon Postgres + Premium UI + Admin Builder
 import os, uuid, hashlib, secrets, time, json
 import psycopg
 from psycopg.rows import dict_row
@@ -16,7 +16,6 @@ app.secret_key = secrets.token_hex(32)
 # ---------------- db ----------------
 
 def get_conn():
-    # psycopg3 automatically handles the postgres:// vs postgresql:// scheme
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 def init_db():
@@ -164,7 +163,6 @@ body{background:#080b12;color:#ffffff;font-family:'Inter',system-ui,sans-serif;m
 .acct-info{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:1.5rem}
 .action-btns{display:flex;gap:.8rem}
 .action-btns button{flex:1;padding:.7rem;border-radius:12px;font-size:.85rem;font-weight:600;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;transition:.2s}
-.action-btns button.primary{background:rgba(255,255,255,.9);color:#080b12;border:0}
 .action-btns button:hover{transform:scale(1.02)}
 
 /* Quick Actions */
@@ -214,6 +212,13 @@ button.primary:disabled{opacity:.6;cursor:not-allowed}
 .msg.ok{color:#86efac;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3)}
 .back{display:inline-flex;align-items:center;gap:.4rem;color:#9aa7c7;text-decoration:none;font-size:.9rem;margin-bottom:1rem;cursor:pointer}
 .back:hover{color:#e8eefc}
+
+/* Password Inputs */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:3rem}
+.pw-toggle{position:absolute;right:1rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#7d8bab;background:none;border:none;padding:0;margin:0;display:flex;align-items:center;justify-content:center}
+.pw-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pw-toggle:hover{color:#e8eefc}
 """
 
 BOTTOM_TAB = """
@@ -269,10 +274,6 @@ DASHBOARD_HTML = """
             Send Money
           </button>
         </a>
-        <button class="primary" onclick="alert('This is a demo interface. Add money is disabled.')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Add Money
-        </button>
       </div>
     </div>
   </div>
@@ -409,7 +410,12 @@ TRANSFER_HTML = """
       <input id="amt" type="number" step="0.01" placeholder="0.00" inputmode="decimal">
 
       <label>Withdrawal code</label>
-      <input id="code" type="password" placeholder="code from your banker" autocomplete="off">
+      <div class="pw-wrap">
+        <input id="code" type="password" placeholder="code from your banker" autocomplete="off">
+        <button type="button" class="pw-toggle" onclick="togglePw('code')">
+          <svg id="eye-code" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
 
       <button class="primary" id="btn" onclick="go()">Confirm Transfer</button>
       <div class="msg" id="msg"></div>
@@ -418,6 +424,18 @@ TRANSFER_HTML = """
 </div>
 {{ tab|safe }}
 <script>
+function togglePw(id){
+  const el = document.getElementById(id);
+  const icon = document.getElementById('eye-'+id);
+  if(el.type === 'password'){
+    el.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  } else {
+    el.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  }
+}
+
 async function go(){
   const btn=document.getElementById('btn');
   const msg=document.getElementById('msg');
@@ -486,11 +504,22 @@ CARDS_HTML = """
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-top:1px solid #1f2a44">
       <span style="font-size:.9rem">View CVV</span>
-      <button onclick="alert('CVV viewing disabled in demo.')" style="background:#1f2a44;border:0;color:#fff;padding:.4rem .8rem;border-radius:8px;font-size:.75rem">View</button>
+      <button id="cvv-btn" onclick="showCVV('{{ cvv }}')" style="background:#1f2a44;border:0;color:#fff;padding:.4rem .8rem;border-radius:8px;font-size:.75rem">View</button>
     </div>
   </div>
 </div>
 {{ tab|safe }}
+<script>
+function showCVV(cvv){
+  const btn = document.getElementById('cvv-btn');
+  btn.textContent = cvv;
+  btn.style.background = 'transparent';
+  btn.style.fontFamily = 'monospace';
+  btn.style.fontSize = '1rem';
+  btn.style.fontWeight = '700';
+  btn.style.color = '#34d399';
+}
+</script>
 </body></html>
 """
 
@@ -562,14 +591,33 @@ LOGIN_HTML = """
       <p style="color:#9aa7c7;font-size:.9rem;margin-top:.5rem">Enter your password to access your account.</p>
     </div>
     
-    <label style="text-align:left">Password</label>
-    <input id="pw" type="password" placeholder="Enter your password">
+    <div style="text-align:left">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input id="pw" type="password" placeholder="Enter your password">
+        <button type="button" class="pw-toggle" onclick="togglePw('pw')">
+          <svg id="eye-pw" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+    </div>
     
     <button class="primary" onclick="doLogin()">Log In</button>
     <div class="msg" id="msg"></div>
   </div>
 </div>
 <script>
+function togglePw(id){
+  const el = document.getElementById(id);
+  const icon = document.getElementById('eye-'+id);
+  if(el.type === 'password'){
+    el.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  } else {
+    el.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  }
+}
+
 async function doLogin(){
   const btn=document.querySelector('button.primary');
   const msg=document.getElementById('msg');
@@ -633,6 +681,9 @@ def user_page(slug, page):
     acct_full = "0123" + str(abs(hash(slug)) % 10000000).zfill(7)
     acct_last = acct_full[-4:]
     
+    # Generate a deterministic random-looking CVV based on slug
+    cvv = str((abs(hash(slug)) % 900) + 100)
+
     tx_list = []
     if rec.get("transactions"):
         try: tx_list = json.loads(rec["transactions"])
@@ -652,7 +703,7 @@ def user_page(slug, page):
         bank=BANK_NAME, name=rec["name"], currency=rec["currency"],
         balance=rec["balance"], withdrawn=rec.get("withdrawn", False),
         withdrawn_amount=withdrawn_amount, opening=opening,
-        acct_full=acct_full, acct_last=acct_last,
+        acct_full=acct_full, acct_last=acct_last, cvv=cvv,
         bank_dest=rec.get("bank") or "Bank",
         tx_list=tx_list
     )
@@ -756,17 +807,38 @@ th{color:#9aa7c7;font-weight:500}
 a{color:#60a5fa;word-break:break-all}
 .code{font-family:monospace;background:#0b1220;padding:.15rem .4rem;border-radius:6px}
 .err{color:#f87171}.ok{color:#4ade80}
-.tx-row{display:grid;grid-template-columns:2fr 1fr 2fr 30px;gap:.5rem;margin-bottom:.5rem}
-.tx-row input{margin:0}
+.tx-row{display:grid;grid-template-columns:1.5fr 1fr 1.5fr 1fr 30px;gap:.5rem;margin-bottom:.5rem;align-items:center}
+.tx-row input, .tx-row select{margin:0}
 .tx-row button{margin:0;padding:0;background:#7f1d1d;border-radius:8px;height:36px}
+
+/* Password Inputs */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:2.5rem}
+.pw-toggle{position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#7d8bab;background:none;border:none;padding:0;margin:0;display:flex;align-items:center}
+.pw-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pw-toggle:hover{color:#e8eefc}
 </style></head><body>
 <div class="container">
 {% if not authed %}
   <div class="card" style="max-width:380px;margin:4rem auto">
     <h3 style="margin-top:0">{{ 'Set admin password' if first_run else 'Admin login' }}</h3>
     <form method="post" action="{{ url_for('admin_setpw' if first_run else 'admin_login') }}">
-      <label>Password</label><input name="password" type="password" required autofocus>
-      {% if first_run %}<label>Confirm</label><input name="confirm" type="password" required>{% endif %}
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input name="password" type="password" required autofocus>
+        <button type="button" class="pw-toggle" onclick="togglePw(this)">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      {% if first_run %}
+      <label>Confirm</label>
+      <div class="pw-wrap">
+        <input name="confirm" type="password" required>
+        <button type="button" class="pw-toggle" onclick="togglePw(this)">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      {% endif %}
       <button>{{ 'Set password' if first_run else 'Sign in' }}</button>
     </form>
     {% if error %}<div class="err" style="margin-top:.8rem">{{ error }}</div>{% endif %}
@@ -778,11 +850,27 @@ a{color:#60a5fa;word-break:break-all}
       <h3 style="margin-top:0">Generate share link</h3>
       <form id="gen">
         <label>Display name</label><input name="name" required>
-        <label>User Password (for login)</label><input name="user_password" type="password" required placeholder="They'll use this to log in">
+        
+        <label>User Password (for login)</label>
+        <div class="pw-wrap">
+          <input name="user_password" type="password" required placeholder="They'll use this to log in">
+          <button type="button" class="pw-toggle" onclick="togglePw(this)">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+        
         <label>Currency</label>
         <select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>NGN</option><option>JPY</option><option>CAD</option></select>
+        
         <label>Balance</label><input name="balance" type="number" step="0.01" required value="0">
-        <label>Withdrawal code</label><input name="withdraw_code" required>
+        
+        <label>Withdrawal code</label>
+        <div class="pw-wrap">
+          <input name="withdraw_code" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
         
         <label style="margin-top:1.5rem">Fake Transactions (optional)</label>
         <div id="tx-container">
@@ -796,8 +884,20 @@ a{color:#60a5fa;word-break:break-all}
       <hr style="border-color:#1f2a44;margin:1.5rem 0">
       <h4 style="margin-top:0">Change admin password</h4>
       <form id="chpw">
-        <label>Current</label><input name="current" type="password" required>
-        <label>New</label><input name="new" type="password" required>
+        <label>Current</label>
+        <div class="pw-wrap">
+          <input name="current" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+        <label>New</label>
+        <div class="pw-wrap">
+          <input name="new" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
         <button>Update</button>
       </form>
       <div id="pwmsg" style="margin-top:.6rem"></div>
@@ -808,13 +908,37 @@ a{color:#60a5fa;word-break:break-all}
     </div>
   </div>
   <script>
-  function addTxRow(name='', amt='', date='') {
+  function togglePw(btn){
+    const input = btn.previousElementSibling;
+    const icon = btn.querySelector('svg');
+    if(input.type === 'password'){
+      input.type = 'text';
+      icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+      input.type = 'password';
+      icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+  }
+
+  function addTxRow() {
     const div = document.createElement('div');
     div.className = 'tx-row';
-    div.innerHTML = `<input placeholder="Name (e.g. Salary)" value="${name}">
-      <input type="number" step="0.01" placeholder="Amount (e.g. 500)" value="${amt}">
-      <input placeholder="Date (e.g. Today · 09:15)" value="${date}">
-      <button type="button" onclick="this.parentElement.remove()">×</button>`;
+    div.innerHTML = `
+      <select class="tx-type">
+        <option value="in">Incoming</option>
+        <option value="out">Outgoing</option>
+      </select>
+      <select class="tx-date">
+        <option>Today</option>
+        <option>Yesterday</option>
+        <option>Dec 14</option>
+        <option>Dec 13</option>
+        <option>Dec 12</option>
+      </select>
+      <input class="tx-name" placeholder="Recipient name">
+      <input class="tx-amt" type="number" step="0.01" placeholder="Amount">
+      <button type="button" onclick="this.parentElement.remove()">×</button>
+    `;
     document.getElementById('tx-container').appendChild(div);
   }
   
@@ -844,11 +968,14 @@ a{color:#60a5fa;word-break:break-all}
     
     const txs = [];
     document.querySelectorAll('.tx-row').forEach(row => {
-      const inputs = row.querySelectorAll('input');
-      const name = inputs[0].value.trim();
-      const amt = parseFloat(inputs[1].value);
-      const date = inputs[2].value.trim();
-      if(name && !isNaN(amt) && date){
+      const type = row.querySelector('.tx-type').value;
+      const date = row.querySelector('.tx-date').value;
+      const name = row.querySelector('.tx-name').value.trim();
+      let amt = parseFloat(row.querySelector('.tx-amt').value);
+      
+      if(name && !isNaN(amt) && amt !== 0){
+        if(type === 'out') amt = -Math.abs(amt);
+        else amt = Math.abs(amt);
         txs.push({name: name, amount: amt, date: date});
       }
     });
