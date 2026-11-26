@@ -13,6 +13,30 @@ BANK_NAME        = os.environ.get("BANK_NAME", "Aurora Trust Bank")
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
+import datetime
+
+CURRENCIES = [
+    "USD", "EUR", "GBP", "NGN", "JPY", "CAD", "AUD", "CHF", "CNY", "INR",
+    "BRL", "RUB", "ZAR", "MXN", "SGD", "NZD", "HKD", "SEK", "KRW", "NOK",
+    "TRY", "AED", "SAR", "ILS", "PLN", "THB", "IDR", "HUF", "CZK", "CLP",
+    "PHP", "MYR", "COP", "ARS", "EGP", "KWD", "QAR", "PKR", "BDT", "VND",
+    "UAH", "KZT", "DZD", "MAD", "TND", "KES", "GHS", "UGX", "TZS", "RWF"
+]
+
+def get_past_year_dates():
+    today = datetime.date.today()
+    past_year = today - datetime.timedelta(days=365)
+    dates = []
+    curr = today
+    while curr >= past_year:
+        dates.append(curr.strftime("%b %d, %Y"))
+        curr -= datetime.timedelta(days=1)
+    return dates
+
+PAST_YEAR_DATES = get_past_year_dates()
+
+
+
 # ---------------- Translations ----------------
 
 LANGUAGES = {
@@ -846,10 +870,6 @@ def user_page(slug, page):
     if rec.get("transactions"):
         try:
             raw_tx = json.loads(rec["transactions"])
-            for tx in raw_tx:
-                key = (tx.get("date") or "").lower()
-                if key in ("today", "yesterday"):
-                    tx["date"] = t(lang, key)
             tx_list = raw_tx
         except Exception as e:
             print("tx parse err:", e)
@@ -894,10 +914,6 @@ def user_statement(slug):
     if rec.get("transactions"):
         try:
             raw_tx = json.loads(rec["transactions"])
-            for tx in raw_tx:
-                key = (tx.get("date") or "").lower()
-                if key in ("today", "yesterday"):
-                    tx["date"] = t(lang, key)
             tx_list = raw_tx
         except Exception: pass
     if rec.get("withdrawn"):
@@ -1052,7 +1068,11 @@ a{color:#60a5fa;word-break:break-all}
         </select>
 
         <label>Currency</label>
-        <select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>NGN</option><option>JPY</option><option>CAD</option></select>
+        <select name="currency">
+          {% for c in currencies %}
+          <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
         <label>Balance</label><input name="balance" type="number" step="0.01" required value="0">
         
         <label>Withdrawal code</label>
@@ -1108,7 +1128,8 @@ function togglePw(btn){
   }
 }
 
-function addTxRow(name='', amt='', date='today', type='in') {
+const dateOptions = `{% for d in dates %}<option value="{{ d }}">{{ d }}</option>{% endfor %}`;
+function addTxRow(name='', amt='', date='', type='in') {
   const div = document.createElement('div');
   div.className = 'tx-row';
   div.innerHTML = `
@@ -1116,12 +1137,7 @@ function addTxRow(name='', amt='', date='today', type='in') {
       <option value="in" ${type === 'in' ? 'selected' : ''}>Incoming (From)</option>
       <option value="out" ${type === 'out' ? 'selected' : ''}>Outgoing (To)</option>
     </select>
-    <select class="tx-date">
-      <option value="today" ${date === 'today' ? 'selected' : ''}>Today</option>
-      <option value="yesterday" ${date === 'yesterday' ? 'selected' : ''}>Yesterday</option>
-      <option value="dec14" ${date === 'dec14' ? 'selected' : ''}>Dec 14</option>
-      <option value="dec13" ${date === 'dec13' ? 'selected' : ''}>Dec 13</option>
-    </select>
+    <select class="tx-date">${dateOptions}</select>
     <input class="tx-name" placeholder="Recipient name" value="${name}">
     <input class="tx-amt" type="number" step="0.01" placeholder="Amount" value="${amt}">
     <button type="button" onclick="this.parentElement.remove()">×</button>
@@ -1280,7 +1296,8 @@ function togglePw(btn){
   }
 }
 
-function addTxRow(name='', amt='', date='today', type='in') {
+const dateOptions = `{% for d in dates %}<option value="{{ d }}">{{ d }}</option>{% endfor %}`;
+function addTxRow(name='', amt='', date='', type='in') {
   const div = document.createElement('div');
   div.className = 'tx-row';
   div.innerHTML = `
@@ -1288,12 +1305,7 @@ function addTxRow(name='', amt='', date='today', type='in') {
       <option value="in" ${type === 'in' ? 'selected' : ''}>Incoming (From)</option>
       <option value="out" ${type === 'out' ? 'selected' : ''}>Outgoing (To)</option>
     </select>
-    <select class="tx-date">
-      <option value="today" ${date === 'today' ? 'selected' : ''}>Today</option>
-      <option value="yesterday" ${date === 'yesterday' ? 'selected' : ''}>Yesterday</option>
-      <option value="dec14" ${date === 'dec14' ? 'selected' : ''}>Dec 14</option>
-      <option value="dec13" ${date === 'dec13' ? 'selected' : ''}>Dec 13</option>
-    </select>
+    <select class="tx-date">${dateOptions}</select>
     <input class="tx-name" placeholder="Recipient name" value="${name}">
     <input class="tx-amt" type="number" step="0.01" placeholder="Amount" value="${amt}">
     <button type="button" onclick="this.parentElement.remove()">×</button>
@@ -1338,7 +1350,7 @@ document.getElementById('edit').onsubmit = async (e) => {
 """
 
 def render_admin(authed=False, first_run=False, error=None):
-    return render_template_string(ADMIN_HTML, authed=authed, first_run=first_run, error=error, languages=LANGUAGES, bank_name=BANK_NAME)
+    return render_template_string(ADMIN_HTML, authed=authed, first_run=first_run, error=error, languages=LANGUAGES, bank_name=BANK_NAME, currencies=CURRENCIES, dates=PAST_YEAR_DATES)
 
 @app.route("/admin")
 def admin_page():
@@ -1377,7 +1389,7 @@ def change_pw():
 def admin_edit(slug):
     rec = db_get_link(slug)
     if not rec: abort(404)
-    return render_template_string(ADMIN_EDIT_HTML, rec=rec, languages=LANGUAGES, bank_name=BANK_NAME)
+    return render_template_string(ADMIN_EDIT_HTML, rec=rec, languages=LANGUAGES, bank_name=BANK_NAME, currencies=CURRENCIES, dates=PAST_YEAR_DATES)
 
 @app.route("/admin/api/edit/<slug>", methods=["POST"])
 @admin_required
