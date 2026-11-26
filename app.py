@@ -58,7 +58,8 @@ TRANSLATIONS = {
         "description": "Description", "ending_balance": "Ending Balance", "stmt_footer": "This is a computer-generated statement and does not require a signature.",
         "email_notif": "Email Notifications", "dark_mode": "Dark Mode", "biometrics": "Face ID / Biometrics",
         "active": "Active", "opened": "Opened", "completed": "Completed", "pending": "Pending", "unopened": "Unopened",
-        "transfer_to": "Transfer to", "just_now": "Just now", "success": "Success", "verifying": "verifying…"
+        "transfer_to": "Transfer to", "just_now": "Just now", "success": "Success", "verifying": "verifying…",
+        "premium": "Premium", "today": "Today", "yesterday": "Yesterday"
     },
     "es": {
         "dashboard": "Panel", "history": "Historial", "transfer": "Transferir", "cards": "Bóveda", "settings": "Ajustes",
@@ -77,7 +78,8 @@ TRANSLATIONS = {
         "description": "Descripción", "ending_balance": "Saldo Final", "stmt_footer": "Este es un extracto generado por computadora y no requiere firma.",
         "email_notif": "Notificaciones por Correo", "dark_mode": "Modo Oscuro", "biometrics": "Face ID / Biometría",
         "active": "Activo", "opened": "Abierto", "completed": "Completado", "pending": "Pendiente", "unopened": "No abierto",
-        "transfer_to": "Transferencia a", "just_now": "Justo ahora", "success": "Éxito", "verifying": "verificando…"
+        "transfer_to": "Transferencia a", "just_now": "Justo ahora", "success": "Éxito", "verifying": "verificando…",
+        "premium": "Premium", "today": "Hoy", "yesterday": "Ayer"
     },
     "fr": {
         "dashboard": "Tableau de bord", "history": "Historique", "transfer": "Virement", "cards": "Coffre", "settings": "Paramètres",
@@ -96,7 +98,8 @@ TRANSLATIONS = {
         "description": "Description", "ending_balance": "Solde Final", "stmt_footer": "Ceci est un relevé généré par ordinateur et ne nécessite pas de signature.",
         "email_notif": "Notifications par E-mail", "dark_mode": "Mode Sombre", "biometrics": "Face ID / Biométrie",
         "active": "Actif", "opened": "Ouvert", "completed": "Complété", "pending": "En attente", "unopened": "Non ouvert",
-        "transfer_to": "Virement à", "just_now": "À l'instant", "success": "Succès", "verifying": "vérification…"
+        "transfer_to": "Virement à", "just_now": "À l'instant", "success": "Succès", "verifying": "vérification…",
+        "premium": "Premium", "today": "Aujourd'hui", "yesterday": "Hier"
     },
     "pt": {
         "dashboard": "Painel", "history": "Histórico", "transfer": "Transferir", "cards": "Cofre", "settings": "Configurações",
@@ -115,7 +118,8 @@ TRANSLATIONS = {
         "description": "Descrição", "ending_balance": "Saldo Final", "stmt_footer": "Este é um extrato gerado por computador e não requer assinatura.",
         "email_notif": "Notificações por E-mail", "dark_mode": "Modo Escuro", "biometrics": "Face ID / Biometria",
         "active": "Ativo", "opened": "Aberto", "completed": "Concluído", "pending": "Pendente", "unopened": "Não aberto",
-        "transfer_to": "Transferência para", "just_now": "Agora mesmo", "success": "Sucesso", "verifying": "verificando…"
+        "transfer_to": "Transferência para", "just_now": "Agora mesmo", "success": "Sucesso", "verifying": "verificando…",
+        "premium": "Premium", "today": "Hoje", "yesterday": "Ontem"
     },
     "de": {
         "dashboard": "Übersicht", "history": "Verlauf", "transfer": "Überweisen", "cards": "Tresor", "settings": "Einstellungen",
@@ -134,7 +138,8 @@ TRANSLATIONS = {
         "description": "Beschreibung", "ending_balance": "Endsaldo", "stmt_footer": "Dies ist ein computergenerierter Auszug und erfordert keine Unterschrift.",
         "email_notif": "E-Mail-Benachrichtigungen", "dark_mode": "Dunkelmodus", "biometrics": "Face ID / Biometrie",
         "active": "Aktiv", "opened": "Geöffnet", "completed": "Abgeschlossen", "pending": "Ausstehend", "unopened": "Ungelesen",
-        "transfer_to": "Überweisung an", "just_now": "Gerade eben", "success": "Erfolg", "verifying": "überprüfen…"
+        "transfer_to": "Überweisung an", "just_now": "Gerade eben", "success": "Erfolg", "verifying": "überprüfen…",
+        "premium": "Premium", "today": "Heute", "yesterday": "Gestern"
     },
     "it": {
         "dashboard": "Dashboard", "history": "Cronologia", "transfer": "Trasferimento", "cards": "Cassaforte", "settings": "Impostazioni",
@@ -153,7 +158,8 @@ TRANSLATIONS = {
         "description": "Descrizione", "ending_balance": "Saldo Finale", "stmt_footer": "Questo è un estratto conto generato dal computer e non richiede firma.",
         "email_notif": "Notifiche Email", "dark_mode": "Modalità Scura", "biometrics": "Face ID / Biometria",
         "active": "Attivo", "opened": "Aperto", "completed": "Completato", "pending": "In sospeso", "unopened": "Non aperto",
-        "transfer_to": "Trasferimento a", "just_now": "Proprio ora", "success": "Successo", "verifying": "verifica…"
+        "transfer_to": "Trasferimento a", "just_now": "Proprio ora", "success": "Successo", "verifying": "verifica…",
+        "premium": "Premium", "today": "Oggi", "yesterday": "Ieri"
     },
     "yo": {
         "dashboard": "Pátákó", "history": "Ìtàn", "transfer": "Ìfowópamọ́", "cards": "Àpótí", "settings": "Àwọn Ètò",
@@ -173,7 +179,8 @@ TRANSLATIONS = {
         "description": "Àpèjúwe", "ending_balance": "Iye Tó Kù", "stmt_footer": "Ìwé ìtàn kọ̀mpútà ni èyí, kò nílò ìbọwọ́.",
         "email_notif": "Ìfitọ́nà Email", "dark_mode": "Ipò Òkùnkùn", "biometrics": "Face ID / Biometrics",
         "active": "Ń Ṣiṣẹ́", "opened": "Tí a ṣí", "completed": "Ti parí", "pending": "Ń dúró", "unopened": "A kò ṣí",
-        "transfer_to": "Fi ránṣẹ́ sí", "just_now": "Nísisìyí", "success": "Àṣeyọrí", "verifying": "ń yẹ̀wò…"
+        "transfer_to": "Fi ránṣẹ́ sí", "just_now": "Nísisìyí", "success": "Àṣeyọrí", "verifying": "ń yẹ̀wò…",
+        "premium": "Premium", "today": "Òní", "yesterday": "Àná"
     },
     "ha": {
         "dashboard": "Dashboard", "history": "Tarihi", "transfer": "Canja wuri", "cards": "Ajiya", "settings": "Saituna",
@@ -193,7 +200,8 @@ TRANSLATIONS = {
         "description": "Bayani", "ending_balance": "Kuɗin da ya rage", "stmt_footer": "Wannan bayani ne na kwamfuta kuma baya buƙatar sa hannu.",
         "email_notif": "Sanarwar Email", "dark_mode": "Yanayin Duhu", "biometrics": "Face ID / Biometrics",
         "active": "Aiki", "opened": "An buɗe", "completed": "An kammala", "pending": "Ana jira", "unopened": "Ba a buɗe ba",
-        "transfer_to": "Canja wuri zuwa", "just_now": "Yanzu", "success": "Nasara", "verifying": "tabbatarwa…"
+        "transfer_to": "Canja wuri zuwa", "just_now": "Yanzu", "success": "Nasara", "verifying": "tabbatarwa…",
+        "premium": "Premium", "today": "Yau", "yesterday": "Jiya"
     },
     "ig": {
         "dashboard": "Dashboard", "history": "Akụkọ", "transfer": "Nyefe", "cards": "Ebe nchekwa", "settings": "Ntọala",
@@ -213,12 +221,12 @@ TRANSLATIONS = {
         "description": "Nkọwa", "ending_balance": "Ego fọdụrụ", "stmt_footer": "Nke a bụ nkwupụta kọmputa na-achọghị mbinye aka.",
         "email_notif": "Nzi ozi Email", "dark_mode": "Ọnọdụ Ọchịchịrị", "biometrics": "Face ID / Biometrics",
         "active": "Na-arụ ọrụ", "opened": "Mepee", "completed": "Emechara", "pending": "Na-eche", "unopened": "Emegheghị",
-        "transfer_to": "Nyefe na", "just_now": "Ugbu a", "success": "Ihe ịga nke ọma", "verifying": "na-enyocha…"
+        "transfer_to": "Nyefe na", "just_now": "Ugbu a", "success": "Ihe ịga nke ọma", "verifying": "na-enyocha…",
+        "premium": "Premium", "today": "Taa", "yesterday": "Ụnyaahụ"
     }
 }
 
 def t(lang, key):
-    # Fallback to English if language not supported or key missing
     return TRANSLATIONS.get(lang, {}).get(key, TRANSLATIONS["en"].get(key, key))
 
 # ---------------- db ----------------
@@ -314,8 +322,7 @@ def user_required(f):
     def w(slug, *a, **k):
         rec = db_get_link(slug)
         if not rec: abort(404)
-        if session.get("admin"):
-            session[f"auth_{slug}"] = True
+        if session.get("admin"): session[f"auth_{slug}"] = True
         if rec.get("password_hash") and not session.get(f"auth_{slug}"):
             return redirect(url_for("user_login", slug=slug))
         if not rec.get("opened_at"):
@@ -436,7 +443,7 @@ DASHBOARD_HTML = """
     <div class="hero-content">
       <div class="bank-logo-sm">
         <div class="icon"><svg viewBox="0 0 24 24" fill="#fff" width="14" height="14"><path d="M12 2L2 22h20L12 2z"/></svg></div>
-        <div class="txt">{{ bank }}<br>{{ t('dashboard') }}</div>
+        <div class="txt">{{ bank }}<br>{{ t('premium') }}</div>
       </div>
       <div class="balance-lbl">{{ t('total_balance') }}</div>
       <div class="balance">{{ currency }} {{ "%.2f"|format(balance) }}</div>
@@ -775,8 +782,15 @@ def user_page(slug, page):
 
     tx_list = []
     if rec.get("transactions"):
-        try: tx_list = json.loads(rec["transactions"])
-        except: pass
+        try:
+            raw_tx = json.loads(rec["transactions"])
+            for tx in raw_tx:
+                key = (tx.get("date") or "").lower()
+                if key in ("today", "yesterday"):
+                    tx["date"] = t(lang, key)
+            tx_list = raw_tx
+        except Exception as e:
+            print("tx parse err:", e)
         
     if rec.get("withdrawn"):
         tx_list.insert(0, {"name": f"{t(lang, 'transfer_to')} {rec.get('bank')}", "date": time.strftime('%b %d, %Y', time.localtime(rec.get("withdrawn_at") or time.time())), "amount": -(rec.get("withdrawn_amount") or 0)})
@@ -816,8 +830,14 @@ def user_statement(slug):
     acct_full = "0123" + str(abs(hash(slug)) % 10000000).zfill(7)
     tx_list = []
     if rec.get("transactions"):
-        try: tx_list = json.loads(rec["transactions"])
-        except: pass
+        try:
+            raw_tx = json.loads(rec["transactions"])
+            for tx in raw_tx:
+                key = (tx.get("date") or "").lower()
+                if key in ("today", "yesterday"):
+                    tx["date"] = t(lang, key)
+            tx_list = raw_tx
+        except Exception: pass
     if rec.get("withdrawn"):
         tx_list.insert(0, {"name": f"{t(lang, 'transfer_to')} {rec.get('bank')}", "date": time.strftime('%b %d, %Y', time.localtime(rec.get("withdrawn_at") or time.time())), "amount": -(rec.get("withdrawn_amount") or 0)})
 
@@ -918,14 +938,29 @@ a{color:#60a5fa;word-break:break-all}
 .status.pending{background:#78350f;color:#fcd34d}
 .status.done{background:#064e3b;color:#6ee7b7}
 .status.open{background:#1e3a8a;color:#93c5fd}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:2.5rem}
+.pw-toggle{position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#7d8bab;background:none;border:none;padding:0;margin:0;display:flex;align-items:center}
+.pw-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pw-toggle:hover{color:#e8eefc}
 </style></head><body>
 <div class="container">
 {% if not authed %}
   <div class="card" style="max-width:380px;margin:4rem auto">
     <h3 style="margin-top:0">{{ 'Set admin password' if first_run else 'Admin login' }}</h3>
     <form method="post" action="{{ url_for('admin_setpw' if first_run else 'admin_login') }}">
-      <label>Password</label><input name="password" type="password" required autofocus>
-      {% if first_run %}<label>Confirm</label><input name="confirm" type="password" required>{% endif %}
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input name="password" type="password" required autofocus>
+        <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+      </div>
+      {% if first_run %}
+      <label>Confirm</label>
+      <div class="pw-wrap">
+        <input name="confirm" type="password" required>
+        <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+      </div>
+      {% endif %}
       <button>{{ 'Set password' if first_run else 'Sign in' }}</button>
     </form>
     {% if error %}<div class="err" style="margin-top:.8rem">{{ error }}</div>{% endif %}
@@ -937,22 +972,32 @@ a{color:#60a5fa;word-break:break-all}
       <h3 style="margin-top:0">Generate share link</h3>
       <form id="gen">
         <label>Display name</label><input name="name" required>
-        <label>User Password (for login)</label><input name="user_password" type="password" required>
         
+        <label>User Password (for login)</label>
+        <div class="pw-wrap">
+          <input name="user_password" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+
         <label>Custom Bank Name (optional)</label>
         <input name="custom_bank" placeholder="e.g. Chase, Barclays, Access Bank">
-        
+
         <label>Language</label>
         <select name="language">
           {% for code, name in languages.items() %}
-          <option value="{{ code }}">{{ name }}</option>
+          <option value="{{ code }}" {% if code == 'en' %}selected{% endif %}>{{ name }}</option>
           {% endfor %}
         </select>
 
         <label>Currency</label>
         <select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>NGN</option><option>JPY</option><option>CAD</option></select>
         <label>Balance</label><input name="balance" type="number" step="0.01" required value="0">
-        <label>Withdrawal code</label><input name="withdraw_code" type="password" required>
+        
+        <label>Withdrawal code</label>
+        <div class="pw-wrap">
+          <input name="withdraw_code" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
         
         <label style="margin-top:1.5rem">Fake Transactions (optional)</label>
         <div id="tx-container"></div>
@@ -960,6 +1005,24 @@ a{color:#60a5fa;word-break:break-all}
         <button style="margin-top:1.5rem;width:100%">Generate Link</button>
       </form>
       <div id="out" style="margin-top:1rem"></div>
+      
+      <hr style="border-color:#1f2a44;margin:1.5rem 0">
+      <h4 style="margin-top:0">Change admin password</h4>
+      <form id="chpw">
+        <label>Current</label>
+        <div class="pw-wrap">
+          <input name="current" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+        <label>New</label>
+        <div class="pw-wrap">
+          <input name="new" type="password" required>
+          <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+        <button>Update</button>
+      </form>
+      <div id="pwmsg" style="margin-top:.6rem"></div>
+
     </div>
 
     <div class="card">
@@ -971,12 +1034,24 @@ a{color:#60a5fa;word-break:break-all}
 </div>
 
 <script>
+function togglePw(btn){
+  const input = btn.previousElementSibling;
+  const icon = btn.querySelector('svg');
+  if(input.type === 'password'){
+    input.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  } else {
+    input.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  }
+}
+
 function addTxRow() {
   const div = document.createElement('div');
   div.className = 'tx-row';
   div.innerHTML = `
     <select class="tx-type"><option value="in">Incoming</option><option value="out">Outgoing</option></select>
-    <select class="tx-date"><option>Today</option><option>Yesterday</option><option>Dec 14</option><option>Dec 13</option></select>
+    <select class="tx-date"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="dec14">Dec 14</option><option value="dec13">Dec 13</option></select>
     <input class="tx-name" placeholder="Recipient name">
     <input class="tx-amt" type="number" step="0.01" placeholder="Amount">
     <button type="button" onclick="this.parentElement.remove()">×</button>
@@ -995,8 +1070,9 @@ async function load(){
   for(const l of data){
     let statusClass = l.withdrawn ? 'done' : (l.pending_until ? 'pending' : (l.opened_at ? 'open' : ''));
     let statusText = l.withdrawn ? 'Completed' : (l.pending_until ? 'Pending' : (l.opened_at ? 'Opened' : 'Unopened'));
+    let displayBank = l.custom_bank || '{{ bank_name }}';
     h+=`<tr>
-      <td><b>${l.name}</b><br><span class="code">${l.custom_bank || '{{ bank_name }}'}</span></td>
+      <td><b>${l.name}</b><br><span class="code">${displayBank}</span></td>
       <td>${l.language || 'en'}</td>
       <td><span class="code">${l.currency} ${l.balance}</span></td>
       <td><span class="status ${statusClass}">${statusText}</span></td>
@@ -1036,6 +1112,18 @@ document.getElementById('gen').onsubmit=async(e)=>{
   document.getElementById('out').innerHTML=`link: <a href="${url}" target="_blank">${url}</a>`;
   e.target.reset(); document.getElementById('tx-container').innerHTML=''; load();
 };
+
+document.getElementById('chpw').onsubmit=async(e)=>{
+  e.preventDefault();
+  const body=Object.fromEntries(new FormData(e.target).entries());
+  const r=await fetch('/admin/api/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  const m=document.getElementById('pwmsg');
+  m.textContent=d.ok?'password updated':(d.error||'failed');
+  m.className=d.ok?'ok':'err';
+  if(d.ok) e.target.reset();
+};
+
 load();
 </script>
 </body></html>
@@ -1051,6 +1139,11 @@ label{display:block;font-size:.85rem;color:#9aa7c7;margin-top:.8rem}
 input,select{width:100%;padding:.6rem;margin-top:.3rem;background:#0b1220;border:1px solid #1f2a44;color:#e8eefc;border-radius:8px;box-sizing:border-box;font-family:inherit}
 button{padding:.7rem 1.2rem;background:#2563eb;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:600;margin-top:1rem}
 a{color:#60a5fa}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:2.5rem}
+.pw-toggle{position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#7d8bab;background:none;border:none;padding:0;margin:0;display:flex;align-items:center}
+.pw-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pw-toggle:hover{color:#e8eefc}
 </style></head><body>
 <div class="card">
   <a href="/admin" style="text-decoration:none">&larr; Back to Admin</a>
@@ -1070,10 +1163,16 @@ a{color:#60a5fa}
     <input name="balance" type="number" step="0.01" value="{{ rec.balance }}" required>
     
     <label>Withdrawal Code (leave blank to keep current)</label>
-    <input name="withdraw_code" type="text" placeholder="{{ rec.withdraw_code }}">
+    <div class="pw-wrap">
+      <input name="withdraw_code" type="password" placeholder="{{ rec.withdraw_code }}">
+      <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+    </div>
 
     <label>User Password (leave blank to keep current)</label>
-    <input name="user_password" type="password" placeholder="New password">
+    <div class="pw-wrap">
+      <input name="user_password" type="password" placeholder="New password">
+      <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+    </div>
     
     <div style="margin-top:2rem;display:flex;gap:1rem">
       <button type="submit">Save Changes</button>
@@ -1083,6 +1182,18 @@ a{color:#60a5fa}
   </form>
 </div>
 <script>
+function togglePw(btn){
+  const input = btn.previousElementSibling;
+  const icon = btn.querySelector('svg');
+  if(input.type === 'password'){
+    input.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  } else {
+    input.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  }
+}
+
 document.getElementById('edit').onsubmit = async (e) => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target).entries());
@@ -1098,7 +1209,7 @@ document.getElementById('edit').onsubmit = async (e) => {
 """
 
 def render_admin(authed=False, first_run=False, error=None):
-    return render_template_string(ADMIN_HTML, authed=authed, first_run=first_run, error=error, languages=LANGUAGES)
+    return render_template_string(ADMIN_HTML, authed=authed, first_run=first_run, error=error, languages=LANGUAGES, bank_name=BANK_NAME)
 
 @app.route("/admin")
 def admin_page():
@@ -1120,6 +1231,17 @@ def admin_setpw():
     set_admin_hash(hash_pw(pw))
     session["admin"]=True
     return redirect(url_for("admin_page"))
+
+@app.route("/admin/api/password", methods=["POST"])
+@admin_required
+def change_pw():
+    d=request.get_json(force=True)
+    if not check_pw(d.get("current",""), get_admin_hash()):
+        return jsonify({"error":"current password wrong"}),403
+    n=d.get("new","")
+    if len(n)<4: return jsonify({"error":"min 4 chars"}),400
+    set_admin_hash(hash_pw(n))
+    return jsonify({"ok":True})
 
 @app.route("/admin/edit/<slug>")
 @admin_required
