@@ -499,6 +499,17 @@ BANK_CSS = """
 [data-theme="light"]{--bg:#f3f4f6;--surface:#ffffff;--border:#e5e7eb;--text:#111827;--text-muted:#6b7280;--accent:#10b981;--icon-bg:#e5e7eb;--tab-bg:#ffffff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;transition:background .3s,color .3s}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;margin:0;padding-bottom:110px;overflow-x:hidden}
+
+/* Hide Google Translate nasty UI */
+.goog-te-banner-frame { display: none !important; }
+.goog-te-balloon-frame { display: none !important; }
+#goog-gt-tt { display: none !important; }
+.goog-tooltip { display: none !important; }
+.goog-tooltip:hover { display: none !important; }
+.goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
+#google_translate_element { display: none !important; position: absolute; bottom: -9999px; left: -9999px; }
+body { top: 0 !important; }
+
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:2rem 1.5rem 1rem}
 .greet{font-size:1.4rem;font-weight:600;line-height:1.2}
 .greet span{display:block;font-size:1.6rem}
@@ -594,39 +605,37 @@ document.addEventListener('DOMContentLoaded', updateThemeIcon);
 </script>
 
 <script>
-// Only translate if the language is not English and not one of our hardcoded ones
 const currentLang = "{{ lang }}";
 const hardcodedLangs = ["en", "es", "fr", "pt", "de", "it", "yo", "ha", "ig", "ko", "ja", "ar", "hi", "ru", "zh"];
 
 if (!hardcodedLangs.includes(currentLang)) {
-    // We use the free Google Translate web element
-    function googleTranslateElementInit() {
+    window.googleTranslateElementInit = function() {
         new google.translate.TranslateElement({
             pageLanguage: 'en',
             includedLanguages: currentLang,
             autoDisplay: false
         }, 'google_translate_element');
-    }
+        
+        // Retry logic to wait for Google to inject the select box
+        let attempts = 0;
+        const triggerInterval = setInterval(() => {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+                clearInterval(triggerInterval);
+                select.value = currentLang;
+                select.dispatchEvent(new Event('change'));
+            }
+            if (++attempts > 30) clearInterval(triggerInterval); // Stop trying after 3 seconds
+        }, 100);
+    };
     
-    // Load the script
     const script = document.createElement('script');
     script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     document.body.appendChild(script);
     
-    // Create the hidden container
     const div = document.createElement('div');
     div.id = 'google_translate_element';
-    div.style.display = 'none';
     document.body.appendChild(div);
-
-    // Wait for the widget to load, then trigger the translation
-    setTimeout(() => {
-        const select = document.querySelector('.goog-te-combo');
-        if (select) {
-            select.value = currentLang;
-            select.dispatchEvent(new Event('change'));
-        }
-    }, 1500);
 }
 </script>
 
