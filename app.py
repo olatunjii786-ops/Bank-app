@@ -527,15 +527,7 @@ BANK_CSS = """
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;transition:background .3s,color .3s}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;margin:0;padding-bottom:110px;overflow-x:hidden}
 
-/* Hide Google Translate nasty UI */
-.goog-te-banner-frame { display: none !important; }
-.goog-te-balloon-frame { display: none !important; }
-#goog-gt-tt { display: none !important; }
-.goog-tooltip { display: none !important; }
-.goog-tooltip:hover { display: none !important; }
-.goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
-#google_translate_element { display: none !important; position: absolute; bottom: -9999px; left: -9999px; }
-body { top: 0 !important; }
+
 
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:2rem 1.5rem 1rem}
 .greet{font-size:1.4rem;font-weight:600;line-height:1.2}
@@ -631,40 +623,7 @@ if(localStorage.getItem('theme') === 'light'){ document.documentElement.setAttri
 document.addEventListener('DOMContentLoaded', updateThemeIcon);
 </script>
 
-<script>
-const currentLang = "{{ lang }}";
-const hardcodedLangs = ["en", "es", "fr", "pt", "de", "it", "yo", "ha", "ig", "ko", "ja", "ar", "hi", "ru", "zh"];
 
-if (!hardcodedLangs.includes(currentLang)) {
-    window.googleTranslateElementInit = function() {
-        new google.translate.TranslateElement({
-            pageLanguage: 'en',
-            includedLanguages: currentLang,
-            autoDisplay: false
-        }, 'google_translate_element');
-        
-        // Retry logic to wait for Google to inject the select box
-        let attempts = 0;
-        const triggerInterval = setInterval(() => {
-            const select = document.querySelector('.goog-te-combo');
-            if (select) {
-                clearInterval(triggerInterval);
-                select.value = currentLang;
-                select.dispatchEvent(new Event('change'));
-            }
-            if (++attempts > 30) clearInterval(triggerInterval); // Stop trying after 3 seconds
-        }, 100);
-    };
-    
-    const script = document.createElement('script');
-    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    document.body.appendChild(script);
-    
-    const div = document.createElement('div');
-    div.id = 'google_translate_element';
-    document.body.appendChild(div);
-}
-</script>
 
 """
 
