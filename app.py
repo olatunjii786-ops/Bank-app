@@ -497,7 +497,7 @@ DASHBOARD_HTML = """
         <div class="txt">{{ bank }}<br>{{ t('premium') }}</div>
       </div>
       <div class="balance-lbl">{{ t('total_balance') }}</div>
-      <div class="balance">{{ currency }} {{ "%.2f"|format(balance) }}</div>
+      <div class="balance">{{ currency }} {{ "{:,.2f}".format(balance) }}</div>
       <div class="acct-info">{{ t('account_number') }} {{ acct_full }} · {{ bank }}</div>
       <div class="action-btns">
         <a href="{{ url_for('user_page', slug=slug, page='transfer') }}" style="flex:1;text-decoration:none">
@@ -799,7 +799,7 @@ th{background:#f9fafb;font-weight:600;color:#111}
       {% endfor %}
     </tbody>
   </table>
-  <div style="margin-top:2rem;text-align:right"><p style="color:#666;font-size:.9rem">{{ t('ending_balance') }}</p><div style="font-size:1.5rem;font-weight:700;color:#111">{{ currency }} {{ "%.2f"|format(balance) }}</div></div>
+  <div style="margin-top:2rem;text-align:right"><p style="color:#666;font-size:.9rem">{{ t('ending_balance') }}</p><div style="font-size:1.5rem;font-weight:700;color:#111">{{ currency }} {{ "{:,.2f}".format(balance) }}</div></div>
   <div class="footer">{{ t('stmt_footer') }}<br>For inquiries, please contact support@{{ bank|lower|replace(' ','') }}.com</div>
 </div>
 <script>window.onload = function() { setTimeout(function(){ window.print(); }, 500); }</script>
