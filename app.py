@@ -256,7 +256,134 @@ TRANSLATIONS = {
         "transfer_to": "Nyefe na", "just_now": "Ugbu a", "success": "Ihe ịga nke ọma", "verifying": "na-enyocha…",
         "premium": "Premium", "today": "Taa", "yesterday": "Ụnyaahụ",
         "from": "Site na", "to": "Na"
+    },
+    "ko": {
+        "dashboard": "대시보드", "history": "내역", "transfer": "송금", "cards": "금고", "settings": "설정",
+        "total_balance": "총 잔액", "account_number": "계좌 번호", "send_money": "송금하기",
+        "recent_tx": "최근 거래", "see_all": "모두 보기", "no_tx": "거래 내역이 없습니다.",
+        "account_settings": "계정 설정", "log_out": "로그아웃", "card_status": "카드 상태",
+        "freeze_card": "카드 정지", "view_cvv": "CVV 보기", "download_stmt": "명세서 다운로드",
+        "get_pdf": "PDF 기록 받기", "download": "다운로드", "bank_name": "은행 이름", "account_no": "계좌 번호",
+        "amount": "금액", "withdraw_code": "출금 코드", "confirm_transfer": "송금 확인",
+        "funds_sent_to": "아래 입력한 은행 계좌로 자금이 송금됩니다.",
+        "transfer_processed": "송금 완료", "funds_sent_msg": "자금이 송금되었습니다. 반영되기까지 몇 분이 걸릴 수 있습니다.",
+        "processing": "처리 중", "processing_msg": "보안상의 이유로 송금이 처리 중입니다.",
+        "do_not_close": "이 페이지를 닫지 마십시오.", "welcome_back": "환영합니다", "enter_password": "계정에 접근하려면 비밀번호를 입력하십시오.",
+        "password": "비밀번호", "login": "로그인", "statement": "계좌 명세서", "date": "날짜",
+        "account_holder": "예금주", "currency": "통화", "tx_history": "거래 내역",
+        "description": "설명", "ending_balance": "최종 잔액", "stmt_footer": "본 명세서는 컴퓨터로 생성되었으며 서명이 필요하지 않습니다.",
+        "email_notif": "이메일 알림", "dark_mode": "다크 모드", "biometrics": "Face ID / 생체 인식",
+        "active": "활성", "opened": "열림", "completed": "완료됨", "pending": "대기 중", "unopened": "열지 않음",
+        "transfer_to": "송금처", "just_now": "방금 전", "success": "성공", "verifying": "확인 중…",
+        "premium": "프리미엄", "today": "오늘", "yesterday": "어제",
+        "from": "보낸 사람", "to": "받는 사람"
+    },
+    "ja": {
+        "dashboard": "ダッシュボード", "history": "履歴", "transfer": "振込", "cards": "保管庫", "settings": "設定",
+        "total_balance": "総残高", "account_number": "口座番号", "send_money": "送金",
+        "recent_tx": "最近の取引", "see_all": "すべて見る", "no_tx": "取引はありません。",
+        "account_settings": "アカウント設定", "log_out": "ログアウト", "card_status": "カードの状態",
+        "freeze_card": "カードを凍結", "view_cvv": "CVVを表示", "download_stmt": "明細書をダウンロード",
+        "get_pdf": "PDF記録を取得", "download": "ダウンロード", "bank_name": "銀行名", "account_no": "口座番号",
+        "amount": "金額", "withdraw_code": "引き出しコード", "confirm_transfer": "振込を確認",
+        "funds_sent_to": "以下に入力した銀行口座に資金が送金されます。",
+        "transfer_processed": "振込完了", "funds_sent_msg": "資金が送金されました。反映されるまで数分かかる場合があります。",
+        "processing": "処理中", "processing_msg": "セキュリティ上の理由により、振込を処理しています。",
+        "do_not_close": "このページを閉じないでください。", "welcome_back": "おかえりなさい", "enter_password": "アカウントにアクセスするにはパスワードを入力してください。",
+        "password": "パスワード", "login": "ログイン", "statement": "口座明細書", "date": "日付",
+        "account_holder": "口座名義人", "currency": "通貨", "tx_history": "取引履歴",
+        "description": "説明", "ending_balance": "最終残高", "stmt_footer": "これはコンピュータ生成の明細書であり、署名は不要です。",
+        "email_notif": "メール通知", "dark_mode": "ダークモード", "biometrics": "Face ID / 生体認証",
+        "active": "有効", "opened": "開封済み", "completed": "完了", "pending": "保留中", "unopened": "未開封",
+        "transfer_to": "振込先", "just_now": "たった今", "success": "成功", "verifying": "確認中…",
+        "premium": "プレミアム", "today": "今日", "yesterday": "昨日",
+        "from": "送信者", "to": "受信者"
+    },
+    "ar": {
+        "dashboard": "لوحة القيادة", "history": "السجل", "transfer": "تحويل", "cards": "خزنة", "settings": "الإعدادات",
+        "total_balance": "الرصيد الإجمالي", "account_number": "رقم الحساب", "send_money": "إرسال الأموال",
+        "recent_tx": "المعاملات الأخيرة", "see_all": "عرض الكل", "no_tx": "لا توجد معاملات بعد.",
+        "account_settings": "إعدادات الحساب", "log_out": "تسجيل الخروج", "card_status": "حالة البطاقة",
+        "freeze_card": "تجميد البطاقة", "view_cvv": "عرض CVV", "download_stmt": "تحميل كشف الحساب",
+        "get_pdf": "احصل على سجل PDF الخاص بك", "download": "تحميل", "bank_name": "اسم البنك", "account_no": "رقم الحساب",
+        "amount": "المبلغ", "withdraw_code": "رمز السحب", "confirm_transfer": "تأكيد التحويل",
+        "funds_sent_to": "سيتم إرسال الأموال إلى الحساب المصرفي الذي تدخله أدناه.",
+        "transfer_processed": "تمت معالجة التحويل", "funds_sent_msg": "تم إرسال أموالك. قد يستغرق ظهورها بضع دقائق.",
+        "processing": "قيد المعالجة", "processing_msg": "يتم معالجة تحويلك لأسباب أمنية.",
+        "do_not_close": "يرجى عدم إغلاق هذه الصفحة.", "welcome_back": "مرحباً بعودتك", "enter_password": "أدخل كلمة المرور للوصول إلى حسابك.",
+        "password": "كلمة المرور", "login": "تسجيل الدخول", "statement": "كشف الحساب", "date": "التاريخ",
+        "account_holder": "صاحب الحساب", "currency": "العملة", "tx_history": "سجل المعاملات",
+        "description": "الوصف", "ending_balance": "الرصيد النهائي", "stmt_footer": "هذا كشف تم إنشاؤه بواسطة الكمبيوتر ولا يتطلب توقيعاً.",
+        "email_notif": "إشعارات البريد الإلكتروني", "dark_mode": "الوضع الداكن", "biometrics": "Face ID / القياسات الحيوية",
+        "active": "نشط", "opened": "مفتوح", "completed": "مكتمل", "pending": "قيد الانتظار", "unopened": "غير مفتوح",
+        "transfer_to": "تحويل إلى", "just_now": "الآن", "success": "نجاح", "verifying": "جارٍ التحقق…",
+        "premium": "بريميوم", "today": "اليوم", "yesterday": "أمس",
+        "from": "من", "to": "إلى"
+    },
+    "hi": {
+        "dashboard": "डैशबोर्ड", "history": "इतिहास", "transfer": "स्थानांतरण", "cards": "तिजोरी", "settings": "सेटिंग्स",
+        "total_balance": "कुल शेष", "account_number": "खाता संख्या", "send_money": "पैसे भेजें",
+        "recent_tx": "हाल के लेनदेन", "see_all": "सभी देखें", "no_tx": "अभी तक कोई लेनदेन नहीं।",
+        "account_settings": "खाता सेटिंग्स", "log_out": "लॉग आउट", "card_status": "कार्ड की स्थिति",
+        "freeze_card": "कार्ड फ्रीज करें", "view_cvv": "CVV देखें", "download_stmt": "विवरण डाउनलोड करें",
+        "get_pdf": "अपना पीडीएफ रिकॉर्ड प्राप्त करें", "download": "डाउनलोड करें", "bank_name": "बैंक का नाम", "account_no": "खाता संख्या",
+        "amount": "राशि", "withdraw_code": "निकासी कोड", "confirm_transfer": "स्थानांतरण की पुष्टि करें",
+        "funds_sent_to": "धनराशि उस बैंक खाते में भेजी जाएगी जो आप नीचे दर्ज करेंगे।",
+        "transfer_processed": "स्थानांतरण संसाधित", "funds_sent_msg": "आपका धन भेज दिया गया है। इसे प्रतिबिंबित होने में कुछ मिनट लग सकते हैं।",
+        "processing": "प्रसंस्करण", "processing_msg": "सुरक्षा कारणों से आपका स्थानांतरण संसाधित किया जा रहा है।",
+        "do_not_close": "कृपया इस पृष्ठ को बंद न करें।", "welcome_back": "वापसी पर स्वागत है", "enter_password": "अपने खाते तक पहुँचने के लिए अपना पासवर्ड दर्ज करें।",
+        "password": "पासवर्ड", "login": "लॉग इन करें", "statement": "खाता विवरण", "date": "तारीख",
+        "account_holder": "खाता धारक", "currency": "मुद्रा", "tx_history": "लेनदेन इतिहास",
+        "description": "विवरण", "ending_balance": "अंतिम शेष", "stmt_footer": "यह कंप्यूटर जनित विवरण है और इसके लिए हस्ताक्षर की आवश्यकता नहीं है।",
+        "email_notif": "ईमेल सूचनाएं", "dark_mode": "डार्क मोड", "biometrics": "फेस आईडी / बायोमेट्रिक्स",
+        "active": "सक्रिय", "opened": "खोला गया", "completed": "पूरा हुआ", "pending": "लंबित", "unopened": "अनखुला",
+        "transfer_to": "को स्थानांतरण", "just_now": "अभी", "success": "सफलता", "verifying": "सत्यापन हो रहा है…",
+        "premium": "प्रीमियम", "today": "आज", "yesterday": "कल",
+        "from": "से", "to": "को"
+    },
+    "ru": {
+        "dashboard": "Панель", "history": "История", "transfer": "Перевод", "cards": "Хранилище", "settings": "Настройки",
+        "total_balance": "Общий баланс", "account_number": "Номер счета", "send_money": "Отправить деньги",
+        "recent_tx": "Последние транзакции", "see_all": "Посмотреть все", "no_tx": "Транзакций пока нет.",
+        "account_settings": "Настройки аккаунта", "log_out": "Выйти", "card_status": "Статус карты",
+        "freeze_card": "Заморозить карту", "view_cvv": "Посмотреть CVV", "download_stmt": "Скачать выписку",
+        "get_pdf": "Получить PDF-запись", "download": "Скачать", "bank_name": "Название банка", "account_no": "Номер счета",
+        "amount": "Сумма", "withdraw_code": "Код вывода", "confirm_transfer": "Подтвердить перевод",
+        "funds_sent_to": "Средства будут отправлены на банковский счет, который вы укажете ниже.",
+        "transfer_processed": "Перевод обработан", "funds_sent_msg": "Ваши средства отправлены. Это может занять несколько минут.",
+        "processing": "Обработка", "processing_msg": "Ваш перевод обрабатывается по соображениям безопасности.",
+        "do_not_close": "Пожалуйста, не закрывайте эту страницу.", "welcome_back": "С возвращением", "enter_password": "Введите пароль для доступа к аккаунту.",
+        "password": "Пароль", "login": "Войти", "statement": "Выписка по счету", "date": "Дата",
+        "account_holder": "Владелец счета", "currency": "Валюта", "tx_history": "История транзакций",
+        "description": "Описание", "ending_balance": "Конечный баланс", "stmt_footer": "Это выписка, сгенерированная компьютером, и она не требует подписи.",
+        "email_notif": "Уведомления по электронной почте", "dark_mode": "Темный режим", "biometrics": "Face ID / Биометрия",
+        "active": "Активный", "opened": "Открыт", "completed": "Завершен", "pending": "В ожидании", "unopened": "Не открыт",
+        "transfer_to": "Перевод на", "just_now": "Только что", "success": "Успех", "verifying": "проверка…",
+        "premium": "Премиум", "today": "Сегодня", "yesterday": "Вчера",
+        "from": "От", "to": "Кому"
+    },
+    "zh": {
+        "dashboard": "仪表盘", "history": "历史记录", "transfer": "转账", "cards": "金库", "settings": "设置",
+        "total_balance": "总余额", "account_number": "账号", "send_money": "汇款",
+        "recent_tx": "最近交易", "see_all": "查看全部", "no_tx": "暂无交易记录。",
+        "account_settings": "账户设置", "log_out": "退出登录", "card_status": "卡片状态",
+        "freeze_card": "冻结卡片", "view_cvv": "查看CVV", "download_stmt": "下载对账单",
+        "get_pdf": "获取PDF记录", "download": "下载", "bank_name": "银行名称", "account_no": "账号",
+        "amount": "金额", "withdraw_code": "提现密码", "confirm_transfer": "确认转账",
+        "funds_sent_to": "资金将发送至您在下方输入的银行账户。",
+        "transfer_processed": "转账已处理", "funds_sent_msg": "您的资金已发送。可能需要几分钟才能反映在账户中。",
+        "processing": "处理中", "processing_msg": "出于安全原因，您的转账正在处理中。",
+        "do_not_close": "请勿关闭此页面。", "welcome_back": "欢迎回来", "enter_password": "请输入密码以访问您的账户。",
+        "password": "密码", "login": "登录", "statement": "账户对账单", "date": "日期",
+        "account_holder": "账户持有人", "currency": "货币", "tx_history": "交易记录",
+        "description": "描述", "ending_balance": "期末余额", "stmt_footer": "这是由计算机生成的对账单，无需签名。",
+        "email_notif": "邮件通知", "dark_mode": "深色模式", "biometrics": "面容 ID / 生物识别",
+        "active": "活跃", "opened": "已打开", "completed": "已完成", "pending": "待处理", "unopened": "未打开",
+        "transfer_to": "转账至", "just_now": "刚刚", "success": "成功", "verifying": "验证中…",
+        "premium": "高级版", "today": "今天", "yesterday": "昨天",
+        "from": "来自", "to": "至"
     }
+
 }
 
 def t(lang, key):
@@ -465,6 +592,44 @@ function updateThemeIcon(){
 if(localStorage.getItem('theme') === 'light'){ document.documentElement.setAttribute('data-theme', 'light'); }
 document.addEventListener('DOMContentLoaded', updateThemeIcon);
 </script>
+
+<script>
+// Only translate if the language is not English and not one of our hardcoded ones
+const currentLang = "{{ lang }}";
+const hardcodedLangs = ["en", "es", "fr", "pt", "de", "it", "yo", "ha", "ig", "ko", "ja", "ar", "hi", "ru", "zh"];
+
+if (!hardcodedLangs.includes(currentLang)) {
+    // We use the free Google Translate web element
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: currentLang,
+            autoDisplay: false
+        }, 'google_translate_element');
+    }
+    
+    // Load the script
+    const script = document.createElement('script');
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    document.body.appendChild(script);
+    
+    // Create the hidden container
+    const div = document.createElement('div');
+    div.id = 'google_translate_element';
+    div.style.display = 'none';
+    document.body.appendChild(div);
+
+    // Wait for the widget to load, then trigger the translation
+    setTimeout(() => {
+        const select = document.querySelector('.goog-te-combo');
+        if (select) {
+            select.value = currentLang;
+            select.dispatchEvent(new Event('change'));
+        }
+    }, 1500);
+}
+</script>
+
 """
 
 # ---------------- Pages ----------------
@@ -892,7 +1057,7 @@ def user_page(slug, page):
         css=BANK_CSS, tab=tab, slug=slug, bank=bank, name=rec["name"], currency=rec["currency"],
         balance=rec["balance"], withdrawn=rec.get("withdrawn", False), withdrawn_amount=withdrawn_amount, 
         opening=opening, acct_full=acct_full, acct_last=acct_last, cvv=cvv, bank_dest=rec.get("bank") or "Bank",
-        tx_list=tx_list, pending_until=pending_until, t=lambda k: t(lang, k), theme_script=THEME_SCRIPT
+        tx_list=tx_list, pending_until=pending_until, t=lambda k: t(lang, k), theme_script=THEME_SCRIPT, lang=lang
     )
     
     if page == 'dashboard': return render_template_string(DASHBOARD_HTML, **kwargs)
