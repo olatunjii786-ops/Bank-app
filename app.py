@@ -1,5 +1,7 @@
 # app.py — Flask + Neon Postgres + Admin Custom Transactions + User Login
-import os, uuid, hashlib, secrets, time, json, psycopg2, psycopg2.extras
+import os, uuid, hashlib, secrets, time, json
+import psycopg
+from psycopg.rows import dict_row
 from urllib.parse import quote
 from flask import Flask, request, jsonify, render_template_string, redirect, url_for, session, abort
 from functools import wraps
@@ -14,46 +16,46 @@ app.secret_key = secrets.token_hex(32)
 # ---------------- db ----------------
 
 def get_conn():
-    return psycopg2.connect(DATABASE_URL)
+    # psycopg3 automatically handles the postgres:// vs postgresql:// scheme
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 def init_db():
-    with get_conn() as conn, conn.cursor() as cur:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS config (
-                key TEXT PRIMARY KEY,
-                value TEXT
-            );
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS links (
-                slug TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                currency TEXT NOT NULL DEFAULT 'USD',
-                balance REAL NOT NULL DEFAULT 0,
-                withdraw_code TEXT NOT NULL,
-                password_hash TEXT,
-                transactions TEXT,
-                withdrawn BOOLEAN NOT NULL DEFAULT FALSE,
-                bank TEXT,
-                account TEXT,
-                withdrawn_amount REAL,
-                created BIGINT NOT NULL
-            );
-        """)
-        # Migrations for existing tables
-        try:
-            cur.execute("ALTER TABLE links ADD COLUMN IF NOT EXISTS password_hash TEXT")
-            cur.execute("ALTER TABLE links ADD COLUMN IF NOT EXISTS transactions TEXT")
-            conn.commit()
-        except Exception:
-            conn.rollback()
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS config (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                );
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS links (
+                    slug TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    currency TEXT NOT NULL DEFAULT 'USD',
+                    balance REAL NOT NULL DEFAULT 0,
+                    withdraw_code TEXT NOT NULL,
+                    password_hash TEXT,
+                    transactions TEXT,
+                    withdrawn BOOLEAN NOT NULL DEFAULT FALSE,
+                    bank TEXT,
+                    account TEXT,
+                    withdrawn_amount REAL,
+                    created BIGINT NOT NULL
+                );
+            """)
+            try:
+                cur.execute("ALTER TABLE links ADD COLUMN IF NOT EXISTS password_hash TEXT")
+                cur.execute("ALTER TABLE links ADD COLUMN IF NOT EXISTS transactions TEXT")
+            except Exception:
+                pass
         conn.commit()
 
 def get_admin_hash():
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute("SELECT value FROM config WHERE key='admin_hash'")
         row = cur.fetchone()
-        return row[0] if row else None
+        return row['value'] if row else None
 
 def set_admin_hash(h):
     with get_conn() as conn, conn.cursor() as cur:
@@ -75,15 +77,14 @@ def check_pw(pw, stored):
     return hashlib.sha256((salt + pw).encode()).hexdigest() == h
 
 def db_list_links():
-    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+    with get_conn() as conn, conn.cursor() as cur:
         cur.execute("SELECT * FROM links ORDER BY created DESC")
-        return [dict(r) for r in cur.fetchall()]
+        return cur.fetchall()
 
 def db_get_link(slug):
-    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+    with get_conn() as conn, conn.cursor() as cur:
         cur.execute("SELECT * FROM links WHERE slug=%s", (slug,))
-        row = cur.fetchone()
-        return dict(row) if row else None
+        return cur.fetchone()
 
 def db_put_link(rec):
     with get_conn() as conn, conn.cursor() as cur:
@@ -576,7 +577,7 @@ async function doLogin(){
   if(!pw){ msg.className='msg err show'; msg.textContent='password required'; return; }
   btn.disabled=true; msg.className='msg show'; msg.textContent='verifying…';
   try{
-    const r=await fetch(location.pathname+'/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+    const r=await fetch('/v/{{slug}}/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
     const d=await r.json();
     if(r.ok&&d.ok){
       msg.className='msg ok show'; msg.textContent='Success — redirecting…';
@@ -632,13 +633,11 @@ def user_page(slug, page):
     acct_full = "0123" + str(abs(hash(slug)) % 10000000).zfill(7)
     acct_last = acct_full[-4:]
     
-    # Parse transactions
     tx_list = []
     if rec.get("transactions"):
         try: tx_list = json.loads(rec["transactions"])
         except: pass
         
-    # Prepend actual withdrawal if exists
     if rec.get("withdrawn"):
         tx_list.insert(0, {
             "name": f"Transfer to {rec.get('bank')}",
@@ -843,7 +842,6 @@ a{color:#60a5fa;word-break:break-all}
     e.preventDefault();
     const formData = new FormData(e.target);
     
-    // parse transactions
     const txs = [];
     document.querySelectorAll('.tx-row').forEach(row => {
       const inputs = row.querySelectorAll('input');
