@@ -1,4 +1,4 @@
-# app.py — The Ultimate Banking Simulator (Multi-language + Per-user Bank Name)
+# app.py — The Ultimate Banking Simulator (Multi-language + Custom Transactions + Full Admin Control)
 import os, uuid, hashlib, secrets, time, json
 import psycopg
 from psycopg.rows import dict_row
@@ -59,7 +59,8 @@ TRANSLATIONS = {
         "email_notif": "Email Notifications", "dark_mode": "Dark Mode", "biometrics": "Face ID / Biometrics",
         "active": "Active", "opened": "Opened", "completed": "Completed", "pending": "Pending", "unopened": "Unopened",
         "transfer_to": "Transfer to", "just_now": "Just now", "success": "Success", "verifying": "verifying…",
-        "premium": "Premium", "today": "Today", "yesterday": "Yesterday"
+        "premium": "Premium", "today": "Today", "yesterday": "Yesterday",
+        "from": "From", "to": "To"
     },
     "es": {
         "dashboard": "Panel", "history": "Historial", "transfer": "Transferir", "cards": "Bóveda", "settings": "Ajustes",
@@ -79,7 +80,8 @@ TRANSLATIONS = {
         "email_notif": "Notificaciones por Correo", "dark_mode": "Modo Oscuro", "biometrics": "Face ID / Biometría",
         "active": "Activo", "opened": "Abierto", "completed": "Completado", "pending": "Pendiente", "unopened": "No abierto",
         "transfer_to": "Transferencia a", "just_now": "Justo ahora", "success": "Éxito", "verifying": "verificando…",
-        "premium": "Premium", "today": "Hoy", "yesterday": "Ayer"
+        "premium": "Premium", "today": "Hoy", "yesterday": "Ayer",
+        "from": "De", "to": "Para"
     },
     "fr": {
         "dashboard": "Tableau de bord", "history": "Historique", "transfer": "Virement", "cards": "Coffre", "settings": "Paramètres",
@@ -99,7 +101,8 @@ TRANSLATIONS = {
         "email_notif": "Notifications par E-mail", "dark_mode": "Mode Sombre", "biometrics": "Face ID / Biométrie",
         "active": "Actif", "opened": "Ouvert", "completed": "Complété", "pending": "En attente", "unopened": "Non ouvert",
         "transfer_to": "Virement à", "just_now": "À l'instant", "success": "Succès", "verifying": "vérification…",
-        "premium": "Premium", "today": "Aujourd'hui", "yesterday": "Hier"
+        "premium": "Premium", "today": "Aujourd'hui", "yesterday": "Hier",
+        "from": "De", "to": "À"
     },
     "pt": {
         "dashboard": "Painel", "history": "Histórico", "transfer": "Transferir", "cards": "Cofre", "settings": "Configurações",
@@ -119,7 +122,8 @@ TRANSLATIONS = {
         "email_notif": "Notificações por E-mail", "dark_mode": "Modo Escuro", "biometrics": "Face ID / Biometria",
         "active": "Ativo", "opened": "Aberto", "completed": "Concluído", "pending": "Pendente", "unopened": "Não aberto",
         "transfer_to": "Transferência para", "just_now": "Agora mesmo", "success": "Sucesso", "verifying": "verificando…",
-        "premium": "Premium", "today": "Hoje", "yesterday": "Ontem"
+        "premium": "Premium", "today": "Hoje", "yesterday": "Ontem",
+        "from": "De", "to": "Para"
     },
     "de": {
         "dashboard": "Übersicht", "history": "Verlauf", "transfer": "Überweisen", "cards": "Tresor", "settings": "Einstellungen",
@@ -139,7 +143,8 @@ TRANSLATIONS = {
         "email_notif": "E-Mail-Benachrichtigungen", "dark_mode": "Dunkelmodus", "biometrics": "Face ID / Biometrie",
         "active": "Aktiv", "opened": "Geöffnet", "completed": "Abgeschlossen", "pending": "Ausstehend", "unopened": "Ungelesen",
         "transfer_to": "Überweisung an", "just_now": "Gerade eben", "success": "Erfolg", "verifying": "überprüfen…",
-        "premium": "Premium", "today": "Heute", "yesterday": "Gestern"
+        "premium": "Premium", "today": "Heute", "yesterday": "Gestern",
+        "from": "Von", "to": "An"
     },
     "it": {
         "dashboard": "Dashboard", "history": "Cronologia", "transfer": "Trasferimento", "cards": "Cassaforte", "settings": "Impostazioni",
@@ -159,7 +164,8 @@ TRANSLATIONS = {
         "email_notif": "Notifiche Email", "dark_mode": "Modalità Scura", "biometrics": "Face ID / Biometria",
         "active": "Attivo", "opened": "Aperto", "completed": "Completato", "pending": "In sospeso", "unopened": "Non aperto",
         "transfer_to": "Trasferimento a", "just_now": "Proprio ora", "success": "Successo", "verifying": "verifica…",
-        "premium": "Premium", "today": "Oggi", "yesterday": "Ieri"
+        "premium": "Premium", "today": "Oggi", "yesterday": "Ieri",
+        "from": "Da", "to": "A"
     },
     "yo": {
         "dashboard": "Pátákó", "history": "Ìtàn", "transfer": "Ìfowópamọ́", "cards": "Àpótí", "settings": "Àwọn Ètò",
@@ -180,7 +186,8 @@ TRANSLATIONS = {
         "email_notif": "Ìfitọ́nà Email", "dark_mode": "Ipò Òkùnkùn", "biometrics": "Face ID / Biometrics",
         "active": "Ń Ṣiṣẹ́", "opened": "Tí a ṣí", "completed": "Ti parí", "pending": "Ń dúró", "unopened": "A kò ṣí",
         "transfer_to": "Fi ránṣẹ́ sí", "just_now": "Nísisìyí", "success": "Àṣeyọrí", "verifying": "ń yẹ̀wò…",
-        "premium": "Premium", "today": "Òní", "yesterday": "Àná"
+        "premium": "Premium", "today": "Òní", "yesterday": "Àná",
+        "from": "Láti", "to": "Sí"
     },
     "ha": {
         "dashboard": "Dashboard", "history": "Tarihi", "transfer": "Canja wuri", "cards": "Ajiya", "settings": "Saituna",
@@ -201,7 +208,8 @@ TRANSLATIONS = {
         "email_notif": "Sanarwar Email", "dark_mode": "Yanayin Duhu", "biometrics": "Face ID / Biometrics",
         "active": "Aiki", "opened": "An buɗe", "completed": "An kammala", "pending": "Ana jira", "unopened": "Ba a buɗe ba",
         "transfer_to": "Canja wuri zuwa", "just_now": "Yanzu", "success": "Nasara", "verifying": "tabbatarwa…",
-        "premium": "Premium", "today": "Yau", "yesterday": "Jiya"
+        "premium": "Premium", "today": "Yau", "yesterday": "Jiya",
+        "from": "Daga", "to": "Zuwa"
     },
     "ig": {
         "dashboard": "Dashboard", "history": "Akụkọ", "transfer": "Nyefe", "cards": "Ebe nchekwa", "settings": "Ntọala",
@@ -222,7 +230,8 @@ TRANSLATIONS = {
         "email_notif": "Nzi ozi Email", "dark_mode": "Ọnọdụ Ọchịchịrị", "biometrics": "Face ID / Biometrics",
         "active": "Na-arụ ọrụ", "opened": "Mepee", "completed": "Emechara", "pending": "Na-eche", "unopened": "Emegheghị",
         "transfer_to": "Nyefe na", "just_now": "Ugbu a", "success": "Ihe ịga nke ọma", "verifying": "na-enyocha…",
-        "premium": "Premium", "today": "Taa", "yesterday": "Ụnyaahụ"
+        "premium": "Premium", "today": "Taa", "yesterday": "Ụnyaahụ",
+        "from": "Site na", "to": "Na"
     }
 }
 
@@ -342,7 +351,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:2rem 1.5rem 1rem}
 .greet{font-size:1.4rem;font-weight:600;line-height:1.2}
 .greet span{display:block;font-size:1.6rem}
-.avatar-wrap{position:relative}
+.avatar-wrap{position:relative;display:flex;align-items:center;gap:1rem}
+.theme-btn{cursor:pointer;background:none;border:none;padding:0;color:var(--text-muted);display:flex;align-items:center;justify-content:center}
+.theme-btn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:600;color:#fff}
 .badge{position:absolute;bottom:0;right:-2px;background:#3b82f6;border:2px solid var(--bg);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
 .wrap{max-width:500px;margin:0 auto;padding:0 1rem}
@@ -415,17 +426,30 @@ function toggleTheme(){
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if(isLight){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); }
   else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
+  updateThemeIcon();
+}
+function updateThemeIcon(){
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const btn = document.getElementById('theme-btn');
+  if(!btn) return;
+  if(isLight){
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+  } else {
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+  }
 }
 if(localStorage.getItem('theme') === 'light'){ document.documentElement.setAttribute('data-theme', 'light'); }
+document.addEventListener('DOMContentLoaded', updateThemeIcon);
 </script>
 """
 
 # ---------------- Pages ----------------
 
 DASHBOARD_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ name }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
+{{ theme_script|safe }}
 <div class="ticker-wrap">
   <div class="ticker">
     <span>USD/NGN 1,540.20 <b class="up">+0.4%</b></span>
@@ -436,7 +460,10 @@ DASHBOARD_HTML = """
 </div>
 <div class="topbar">
   <div class="greet">{{ t('dashboard') }},<span>{{ name.split(' ')[0] }}</span></div>
-  <div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div><div class="badge"><svg viewBox="0 0 24 24" fill="#fff" width="10" height="10"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div></div>
+  <div class="avatar-wrap">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()"></button>
+    <div style="position:relative"><div class="avatar">{{ name[0]|upper }}</div><div class="badge"><svg viewBox="0 0 24 24" fill="#fff" width="10" height="10"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div></div>
+  </div>
 </div>
 <div class="wrap">
   <div class="hero-card">
@@ -471,7 +498,10 @@ DASHBOARD_HTML = """
               {% if tx.amount > 0 %}<svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
               {% else %}<svg viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>{% endif %}
             </div>
-            <div><div class="ttl">{{ tx.name }}</div><div class="sub">{{ tx.date }}</div></div>
+            <div>
+              <div class="ttl">{{ t('from') if tx.amount > 0 else t('to') }}: {{ tx.name }}</div>
+              <div class="sub">{{ tx.date }}</div>
+            </div>
           </div>
           <div class="amt {{ 'pos' if tx.amount > 0 else 'neg' }}">{{ '+' if tx.amount > 0 else '-' }}{{ currency }} {{ "{:,.2f}".format(tx.amount|abs) }}</div>
         </div>
@@ -484,10 +514,17 @@ DASHBOARD_HTML = """
 """
 
 HISTORY_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ t('history') }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Transactions — Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
-<div class="topbar"><div class="greet">{{ t('history') }}<span>{{ t('history') }}</span></div><div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div></div>
+{{ theme_script|safe }}
+<div class="topbar">
+  <div class="greet">{{ t('history') }}<span>{{ t('history') }}</span></div>
+  <div class="avatar-wrap">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()"></button>
+    <div class="avatar">{{ name[0]|upper }}</div>
+  </div>
+</div>
 <div class="wrap">
   <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
     <div><div style="font-size:.9rem;font-weight:600">{{ t('download_stmt') }}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">{{ t('get_pdf') }}</div></div>
@@ -502,7 +539,10 @@ HISTORY_HTML = """
               {% if tx.amount > 0 %}<svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
               {% else %}<svg viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>{% endif %}
             </div>
-            <div><div class="ttl">{{ tx.name }}</div><div class="sub">{{ tx.date }}</div></div>
+            <div>
+              <div class="ttl">{{ t('from') if tx.amount > 0 else t('to') }}: {{ tx.name }}</div>
+              <div class="sub">{{ tx.date }}</div>
+            </div>
           </div>
           <div class="amt {{ 'pos' if tx.amount > 0 else 'neg' }}">{{ '+' if tx.amount > 0 else '-' }}{{ currency }} {{ "{:,.2f}".format(tx.amount|abs) }}</div>
         </div>
@@ -515,10 +555,17 @@ HISTORY_HTML = """
 """
 
 TRANSFER_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ t('transfer') }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Transfer — Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
-<div class="topbar"><div class="greet">{{ t('transfer') }}<span>{{ t('transfer') }}</span></div><div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div></div>
+{{ theme_script|safe }}
+<div class="topbar">
+  <div class="greet">{{ t('transfer') }}<span>{{ t('transfer') }}</span></div>
+  <div class="avatar-wrap">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()"></button>
+    <div class="avatar">{{ name[0]|upper }}</div>
+  </div>
+</div>
 <div class="wrap">
   {% if withdrawn %}
     <div class="card" style="text-align:center;padding:2.5rem 1.5rem;margin-top:2rem">
@@ -580,10 +627,17 @@ async function go(){
 """
 
 CARDS_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ t('cards') }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Cards — Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
-<div class="topbar"><div class="greet">{{ t('cards') }}<span>{{ t('cards') }}</span></div><div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div></div>
+{{ theme_script|safe }}
+<div class="topbar">
+  <div class="greet">{{ t('cards') }}<span>{{ t('cards') }}</span></div>
+  <div class="avatar-wrap">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()"></button>
+    <div class="avatar">{{ name[0]|upper }}</div>
+  </div>
+</div>
 <div class="wrap">
   <div class="hero-card" style="height:200px;display:flex;flex-direction:column;justify-content:space-between">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1">
@@ -614,10 +668,17 @@ function showCVV(cvv){ const btn = document.getElementById('cvv-btn'); btn.textC
 """
 
 SETTINGS_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ t('settings') }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Settings — Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
-<div class="topbar"><div class="greet">{{ t('settings') }}<span>{{ t('settings') }}</span></div><div class="avatar-wrap"><div class="avatar">{{ name[0]|upper }}</div></div></div>
+{{ theme_script|safe }}
+<div class="topbar">
+  <div class="greet">{{ t('settings') }}<span>{{ t('settings') }}</span></div>
+  <div class="avatar-wrap">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()"></button>
+    <div class="avatar">{{ name[0]|upper }}</div>
+  </div>
+</div>
 <div class="wrap">
   <div class="card" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
     <div class="avatar" style="width:60px;height:60px;font-size:1.5rem">{{ name[0]|upper }}</div>
@@ -647,9 +708,10 @@ updateSlider();
 """
 
 LOGIN_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ t('login') }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Login — Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>{{ css|safe }}</style></head><body>
+{{ theme_script|safe }}
 <div class="wrap" style="margin-top:20vh">
   <div class="card" style="text-align:center">
     <div class="hero-content" style="margin-bottom:2rem">
@@ -683,7 +745,7 @@ async function doLogin(){
 """
 
 STATEMENT_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ t('statement') }} — {{ bank }}</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Statement — Client Portal</title>
 <style>
 body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#fff;color:#333;margin:0;padding:2rem}
 .page{max-width:800px;margin:0 auto;background:#fff}
@@ -709,7 +771,7 @@ th{background:#f9fafb;font-weight:600;color:#111}
     <thead><tr><th>{{ t('date') }}</th><th>{{ t('description') }}</th><th>{{ t('amount') }}</th></tr></thead>
     <tbody>
       {% for tx in tx_list %}
-      <tr><td>{{ tx.date }}</td><td>{{ tx.name }}</td><td class="{{ 'amt-pos' if tx.amount > 0 else 'amt-neg' }}">{{ '+' if tx.amount > 0 else '-' }}{{ currency }} {{ "{:,.2f}".format(tx.amount|abs) }}</td></tr>
+      <tr><td>{{ tx.date }}</td><td>{{ t('from') if tx.amount > 0 else t('to') }}: {{ tx.name }}</td><td class="{{ 'amt-pos' if tx.amount > 0 else 'amt-neg' }}">{{ '+' if tx.amount > 0 else '-' }}{{ currency }} {{ "{:,.2f}".format(tx.amount|abs) }}</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -723,7 +785,7 @@ th{background:#f9fafb;font-weight:600;color:#111}
 # ---------------- Routing ----------------
 
 def build_tab(slug, active, lang):
-    return THEME_SCRIPT + f"""
+    return f"""
     <div class="tabbar">
       <a class="tab {'active' if active=='dashboard' else ''}" href="/v/{slug}/dashboard"><div class="ico-wrap"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div><span>{t(lang, 'dashboard')}</span></a>
       <a class="tab {'active' if active=='history' else ''}" href="/v/{slug}/history"><div class="ico-wrap"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><span>{t(lang, 'history')}</span></a>
@@ -740,7 +802,7 @@ def user_login(slug):
     if not rec.get("password_hash"): return redirect(url_for("user_page", slug=slug, page="dashboard"))
     lang = rec.get("language") or "en"
     bank = rec.get("custom_bank") or BANK_NAME
-    return render_template_string(LOGIN_HTML, css=BANK_CSS, bank=bank, name=rec["name"], slug=slug, t=lambda k: t(lang, k))
+    return render_template_string(LOGIN_HTML, css=BANK_CSS, bank=bank, name=rec["name"], slug=slug, t=lambda k: t(lang, k), theme_script=THEME_SCRIPT)
 
 @app.route("/v/<slug>/auth", methods=["POST"])
 def user_auth(slug):
@@ -793,7 +855,7 @@ def user_page(slug, page):
             print("tx parse err:", e)
         
     if rec.get("withdrawn"):
-        tx_list.insert(0, {"name": f"{t(lang, 'transfer_to')} {rec.get('bank')}", "date": time.strftime('%b %d, %Y', time.localtime(rec.get("withdrawn_at") or time.time())), "amount": -(rec.get("withdrawn_amount") or 0)})
+        tx_list.insert(0, {"name": f"{rec.get('bank')}", "date": time.strftime('%b %d, %Y', time.localtime(rec.get("withdrawn_at") or time.time())), "amount": -(rec.get("withdrawn_amount") or 0)})
 
     pending_until = rec.get("pending_until")
     if pending_until:
@@ -810,7 +872,7 @@ def user_page(slug, page):
         css=BANK_CSS, tab=tab, slug=slug, bank=bank, name=rec["name"], currency=rec["currency"],
         balance=rec["balance"], withdrawn=rec.get("withdrawn", False), withdrawn_amount=withdrawn_amount, 
         opening=opening, acct_full=acct_full, acct_last=acct_last, cvv=cvv, bank_dest=rec.get("bank") or "Bank",
-        tx_list=tx_list, pending_until=pending_until, t=lambda k: t(lang, k)
+        tx_list=tx_list, pending_until=pending_until, t=lambda k: t(lang, k), theme_script=THEME_SCRIPT
     )
     
     if page == 'dashboard': return render_template_string(DASHBOARD_HTML, **kwargs)
@@ -839,7 +901,7 @@ def user_statement(slug):
             tx_list = raw_tx
         except Exception: pass
     if rec.get("withdrawn"):
-        tx_list.insert(0, {"name": f"{t(lang, 'transfer_to')} {rec.get('bank')}", "date": time.strftime('%b %d, %Y', time.localtime(rec.get("withdrawn_at") or time.time())), "amount": -(rec.get("withdrawn_amount") or 0)})
+        tx_list.insert(0, {"name": f"{rec.get('bank')}", "date": time.strftime('%b %d, %Y', time.localtime(rec.get("withdrawn_at") or time.time())), "amount": -(rec.get("withdrawn_amount") or 0)})
 
     return render_template_string(STATEMENT_HTML, bank=bank, name=rec["name"], currency=rec["currency"], 
         balance=rec["balance"], acct_full=acct_full, tx_list=tx_list, date=time.strftime('%B %d, %Y'), t=lambda k: t(lang, k))
@@ -871,7 +933,7 @@ def withdraw_submit(slug):
 # ---------------- Landing ----------------
 
 NOT_A_USER_HTML = """
-<!doctype html><html><head><meta charset="utf-8"><title>{{ bank }} — Not a user</title>
+<!doctype html><html><head><meta charset="utf-8"><title>Client Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{background:#080b12;color:#ffffff;font-family:'Inter',system-ui,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
@@ -1046,14 +1108,22 @@ function togglePw(btn){
   }
 }
 
-function addTxRow() {
+function addTxRow(name='', amt='', date='today', type='in') {
   const div = document.createElement('div');
   div.className = 'tx-row';
   div.innerHTML = `
-    <select class="tx-type"><option value="in">Incoming</option><option value="out">Outgoing</option></select>
-    <select class="tx-date"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="dec14">Dec 14</option><option value="dec13">Dec 13</option></select>
-    <input class="tx-name" placeholder="Recipient name">
-    <input class="tx-amt" type="number" step="0.01" placeholder="Amount">
+    <select class="tx-type">
+      <option value="in" ${type === 'in' ? 'selected' : ''}>Incoming (From)</option>
+      <option value="out" ${type === 'out' ? 'selected' : ''}>Outgoing (To)</option>
+    </select>
+    <select class="tx-date">
+      <option value="today" ${date === 'today' ? 'selected' : ''}>Today</option>
+      <option value="yesterday" ${date === 'yesterday' ? 'selected' : ''}>Yesterday</option>
+      <option value="dec14" ${date === 'dec14' ? 'selected' : ''}>Dec 14</option>
+      <option value="dec13" ${date === 'dec13' ? 'selected' : ''}>Dec 13</option>
+    </select>
+    <input class="tx-name" placeholder="Recipient name" value="${name}">
+    <input class="tx-amt" type="number" step="0.01" placeholder="Amount" value="${amt}">
     <button type="button" onclick="this.parentElement.remove()">×</button>
   `;
   document.getElementById('tx-container').appendChild(div);
@@ -1144,10 +1214,19 @@ a{color:#60a5fa}
 .pw-toggle{position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#7d8bab;background:none;border:none;padding:0;margin:0;display:flex;align-items:center}
 .pw-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pw-toggle:hover{color:#e8eefc}
+.tx-row{display:grid;grid-template-columns:1.5fr 1fr 1.5fr 1fr 30px;gap:.5rem;margin-bottom:.5rem;align-items:center}
+.tx-row input, .tx-row select{margin:0}
+.tx-row button{margin:0;padding:0;background:#7f1d1d;border-radius:8px;height:36px}
 </style></head><body>
 <div class="card">
   <a href="/admin" style="text-decoration:none">&larr; Back to Admin</a>
   <h2 style="margin-top:1rem">Edit: {{ rec.name }}</h2>
+  
+  <div style="background:#0b1220;padding:1rem;border-radius:8px;margin-bottom:1.5rem;border:1px solid #1f2a44">
+    <label style="margin-top:0">User Link</label>
+    <a href="/v/{{ rec.slug }}/dashboard" target="_blank" style="font-size:.9rem">/v/{{ rec.slug }}/dashboard</a>
+  </div>
+
   <form id="edit">
     <label>Custom Bank Name</label>
     <input name="custom_bank" value="{{ rec.custom_bank or '' }}" placeholder="{{ bank_name }}">
@@ -1174,6 +1253,10 @@ a{color:#60a5fa}
       <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
     </div>
     
+    <label style="margin-top:1.5rem">Transactions</label>
+    <div id="tx-container"></div>
+    <button type="button" onclick="addTxRow()" style="background:#1f2a44;font-size:.8rem;padding:.4rem .8rem">+ Add Transaction</button>
+    
     <div style="margin-top:2rem;display:flex;gap:1rem">
       <button type="submit">Save Changes</button>
       <a href="/v/{{ rec.slug }}/dashboard" target="_blank" style="text-decoration:none;padding:.7rem 1.2rem;background:#1e3a8a;border-radius:8px;font-weight:600;font-size:.9rem;display:inline-block">Preview as User</a>
@@ -1182,6 +1265,9 @@ a{color:#60a5fa}
   </form>
 </div>
 <script>
+let initialTx = [];
+try { initialTx = JSON.parse('{{ rec.transactions | safe }}'); } catch(e){}
+
 function togglePw(btn){
   const input = btn.previousElementSibling;
   const icon = btn.querySelector('svg');
@@ -1194,9 +1280,52 @@ function togglePw(btn){
   }
 }
 
+function addTxRow(name='', amt='', date='today', type='in') {
+  const div = document.createElement('div');
+  div.className = 'tx-row';
+  div.innerHTML = `
+    <select class="tx-type">
+      <option value="in" ${type === 'in' ? 'selected' : ''}>Incoming (From)</option>
+      <option value="out" ${type === 'out' ? 'selected' : ''}>Outgoing (To)</option>
+    </select>
+    <select class="tx-date">
+      <option value="today" ${date === 'today' ? 'selected' : ''}>Today</option>
+      <option value="yesterday" ${date === 'yesterday' ? 'selected' : ''}>Yesterday</option>
+      <option value="dec14" ${date === 'dec14' ? 'selected' : ''}>Dec 14</option>
+      <option value="dec13" ${date === 'dec13' ? 'selected' : ''}>Dec 13</option>
+    </select>
+    <input class="tx-name" placeholder="Recipient name" value="${name}">
+    <input class="tx-amt" type="number" step="0.01" placeholder="Amount" value="${amt}">
+    <button type="button" onclick="this.parentElement.remove()">×</button>
+  `;
+  document.getElementById('tx-container').appendChild(div);
+}
+
+initialTx.forEach(tx => {
+  const type = tx.amount < 0 ? 'out' : 'in';
+  const amt = Math.abs(tx.amount);
+  addTxRow(tx.name, amt, tx.date, type);
+});
+
 document.getElementById('edit').onsubmit = async (e) => {
   e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target).entries());
+  const formData = new FormData(e.target);
+  
+  const txs = [];
+  document.querySelectorAll('.tx-row').forEach(row => {
+    const type = row.querySelector('.tx-type').value;
+    const date = row.querySelector('.tx-date').value;
+    const name = row.querySelector('.tx-name').value.trim();
+    let amt = parseFloat(row.querySelector('.tx-amt').value);
+    if(name && !isNaN(amt) && amt !== 0){
+      if(type === 'out') amt = -Math.abs(amt); else amt = Math.abs(amt);
+      txs.push({name: name, amount: amt, date: date});
+    }
+  });
+  
+  const body = Object.fromEntries(formData.entries());
+  body.transactions = JSON.stringify(txs);
+  
   const r = await fetch('/admin/api/edit/{{ rec.slug }}', {
     method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
   });
@@ -1258,6 +1387,7 @@ def admin_api_edit(slug):
     if "balance" in d: rec["balance"] = float(d["balance"])
     if "language" in d: rec["language"] = d["language"]
     if "custom_bank" in d: rec["custom_bank"] = d["custom_bank"].strip() or None
+    if "transactions" in d: rec["transactions"] = d["transactions"]
     if d.get("withdraw_code"): rec["withdraw_code"] = d["withdraw_code"].strip()
     if d.get("user_password"): rec["password_hash"] = hash_pw(d["user_password"].strip())
     db_put_link(rec)
